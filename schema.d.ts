@@ -20,7 +20,8 @@ type SchemaObject = {
     readonly minLength?: nonNegativeIntegerDefault0;
     readonly pattern?: string;
     readonly additionalItems?: SchemaObject;
-    readonly items?: (any);
+    readonly items?: SchemaObject|
+    schemaArray;
     readonly maxItems?: nonNegativeInteger;
     readonly minItems?: nonNegativeIntegerDefault0;
     readonly uniqueItems?: boolean;
@@ -39,12 +40,14 @@ type SchemaObject = {
         readonly [_:string]: SchemaObject;
     };
     readonly dependencies?: {
-        readonly [_:string]: (any);
+        readonly [_:string]: SchemaObject|
+        stringArray;
     };
     readonly propertyNames?: SchemaObject;
     readonly const?: {};
     readonly enum?: any[];
-    readonly type?: (any);
+    readonly type?: simpleTypes|
+    simpleTypes[];
     readonly format?: string;
     readonly allOf?: schemaArray;
     readonly anyOf?: schemaArray;

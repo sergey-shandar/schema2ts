@@ -23,14 +23,20 @@ function* indent(i: IterableIterator<string>) {
 }
 
 function* join(ii: Iterable<Iterable<string>>, separator: string) {
-    let notFirst = false;
+    let previous = undefined;
     for (const i of ii) {
-        if (notFirst) {
-            yield separator;
-        } else {
-            notFirst = true;
+        if (previous !== undefined) {
+            previous += separator;
         }
-        yield *i;        
+        for (const v of i) {
+            if (previous !== undefined) {
+                yield previous;
+            }
+            previous = v;
+        }
+    }
+    if (previous !== undefined) {
+        yield previous;
     }
 }
 
@@ -44,6 +50,7 @@ namespace Ts {
         readonly ref?: string;
         readonly interface?: Interface;
         readonly union?: Type[];
+        readonly array?: Type;
     }
     export interface TypeAlias {
         readonly name: string;
@@ -54,7 +61,7 @@ namespace Ts {
     export function* type(t: Type): IterableIterator<string> {        
         if (t.ref !== undefined) {
             yield t.ref;
-        } else if(t.interface !== undefined) {
+        } else if (t.interface !== undefined) {
             if (t.interface.length == 0) {
                 yield "{}";
             } else {
@@ -64,8 +71,10 @@ namespace Ts {
                 }
                 yield "}";
             }
-        } else if(t.union !== undefined) {
-            yield "(any)";
+        } else if (t.union !== undefined) {
+            yield *join(t.union.map(type), "|"), "(", ")";
+        } else if (t.array !== undefined) {
+            yield *wrap(type(t.array), "", "[]");
         }
     }
 
@@ -100,8 +109,12 @@ const main = "SchemaObject";
 
 const definitionsUri = "#/definitions/";
 
-function createType(schemaObject: SchemaObject): Ts.Type {
+function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     
+    if (schemaObject === undefined) {
+        return { ref: "any" };
+    }
+
     // $ref
     {
         const $ref = schemaObject.$ref;
@@ -132,9 +145,7 @@ function createType(schemaObject: SchemaObject): Ts.Type {
             }
             return { interface: properties };
         case "array":
-            const items = schemaObject.items;
-            const type = items !== undefined ? createType(items) : "any";
-            return { ref: type + "[]" };
+            return { array: createType(schemaObject.items) };
     }
 
     return { ref: type };
