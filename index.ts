@@ -19,6 +19,11 @@ namespace Ts {
         }
         yield "}";
     }
+    export function* module(m: Module) {
+        for (const i of m) {
+            yield* interface_(i);
+        }
+    }
 }
 
 // http://json-schema.org/schema
@@ -28,11 +33,15 @@ interface SchemaObject {
     readonly $ref?: string;
     readonly type?: string;
     readonly anyOf?: SchemaObject[];
-    readonly properties?: {readonly [name: string]: SchemaObject};
+    readonly definitions?: {readonly [_:string]: SchemaObject};
+    readonly properties?: {readonly [_:string]: SchemaObject};
     readonly additionalProperties?: SchemaObject;
+    readonly items?: SchemaObject;
 }
 
 const main = "SchemaObject";
+
+const definitionsUri = "#/definitions/";
 
 function createType(schemaObject: SchemaObject): string {
     
@@ -40,7 +49,11 @@ function createType(schemaObject: SchemaObject): string {
     {
         const $ref = schemaObject.$ref;
         if ($ref !== undefined) {
-            return $ref === "#" ? main : "any";
+            if ($ref === "#") return main;
+            if ($ref.startsWith(definitionsUri)) {
+                return $ref.substr(definitionsUri.length);
+            }
+            return "any";
         }
     }
 
@@ -48,7 +61,7 @@ function createType(schemaObject: SchemaObject): string {
     {
         const anyOf = schemaObject.anyOf;
         if (anyOf !== undefined) {
-            return anyOf.map(createType).join("|");
+            return "(" + anyOf.map(createType).join("|") + ")";
         }
     }
 
@@ -57,27 +70,43 @@ function createType(schemaObject: SchemaObject): string {
         case "object":
             let result = "{";
             const additionalProperties = schemaObject.additionalProperties;
-            if (additionalProperties) {
+            if (additionalProperties !== undefined) {
                 result += "readonly[_:string]:" + createType(additionalProperties) + ";";
             }
             return result + "}";
         case "array":
-            return "any[]";
+            const items = schemaObject.items;
+            const type = items !== undefined ? createType(items) : "any";
+            return type + "[]";
     }
 
     return type;
 }
 
-const object : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
+const schemaObject : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
 
-const schemaProperties = object.properties;
-const tsProperties = schemaProperties !== undefined 
-    ? Object.keys(schemaProperties).map(name => ({ name: name, type: createType(schemaProperties[name]) }))
+function createProperties(properties: {readonly[_:string]: SchemaObject}|undefined) {
+    return properties !== undefined 
+        ? Object.keys(properties).map(name => ({ name: name, type: createType(properties[name]) }))
+        : [];
+}
+
+function createDefinition(name: string, schema: SchemaObject) {
+    return {name: name, properties: createProperties(schema.properties)};
+}
+
+const schemaDefinitions = schemaObject.definitions;
+
+const definitions = schemaDefinitions !== undefined
+    ? Object
+        .keys(schemaDefinitions)
+        .map(name => createDefinition(name, schemaDefinitions[name]))
     : [];
-const result = Ts.interface_({name: main, properties: tsProperties});
+
+const result = definitions.concat(createDefinition(main, schemaObject));
 
 let text = "";
-for (const line of result) {
+for (const line of Ts.module(result)) {
     text += os.EOL + line;
 }
 fs.writeFileSync("schema.d.ts", text);

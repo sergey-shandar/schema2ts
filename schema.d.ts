@@ -1,4 +1,14 @@
 
+interface schemaArray{
+}
+interface nonNegativeInteger{
+}
+interface nonNegativeIntegerDefault0{
+}
+interface simpleTypes{
+}
+interface stringArray{
+}
 interface SchemaObject{
     readonly $id?: string;
     readonly $schema?: string;
@@ -11,30 +21,30 @@ interface SchemaObject{
     readonly exclusiveMaximum?: number;
     readonly minimum?: number;
     readonly exclusiveMinimum?: number;
-    readonly maxLength?: any;
-    readonly minLength?: any;
+    readonly maxLength?: nonNegativeInteger;
+    readonly minLength?: nonNegativeIntegerDefault0;
     readonly pattern?: string;
     readonly additionalItems?: SchemaObject;
-    readonly items?: SchemaObject|any;
-    readonly maxItems?: any;
-    readonly minItems?: any;
+    readonly items?: (SchemaObject|schemaArray);
+    readonly maxItems?: nonNegativeInteger;
+    readonly minItems?: nonNegativeIntegerDefault0;
     readonly uniqueItems?: boolean;
     readonly contains?: SchemaObject;
-    readonly maxProperties?: any;
-    readonly minProperties?: any;
-    readonly required?: any;
+    readonly maxProperties?: nonNegativeInteger;
+    readonly minProperties?: nonNegativeIntegerDefault0;
+    readonly required?: stringArray;
     readonly additionalProperties?: SchemaObject;
     readonly definitions?: {readonly[_:string]:SchemaObject;};
     readonly properties?: {readonly[_:string]:SchemaObject;};
     readonly patternProperties?: {readonly[_:string]:SchemaObject;};
-    readonly dependencies?: {readonly[_:string]:SchemaObject|any;};
+    readonly dependencies?: {readonly[_:string]:(SchemaObject|stringArray);};
     readonly propertyNames?: SchemaObject;
     readonly const?: {};
     readonly enum?: any[];
-    readonly type?: any|any[];
+    readonly type?: (simpleTypes|simpleTypes[]);
     readonly format?: string;
-    readonly allOf?: any;
-    readonly anyOf?: any;
-    readonly oneOf?: any;
+    readonly allOf?: schemaArray;
+    readonly anyOf?: schemaArray;
+    readonly oneOf?: schemaArray;
     readonly not?: SchemaObject;
 }
