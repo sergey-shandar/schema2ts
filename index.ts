@@ -60,6 +60,7 @@ namespace Ts {
         readonly union?: Type[];
         readonly array?: Type;
         readonly tuple?: Type[];
+        readonly const?: string;
     }
     export interface TypeAlias {
         readonly name: string;
@@ -86,6 +87,8 @@ namespace Ts {
             yield *wrap(type(t.array), "", "[]");
         } else if (t.tuple !== undefined) {
             yield *wrap(join(t.tuple.map(type), ","), "[", "]");
+        } else if (t.const !== undefined) {
+            yield '"' + t.const + '"';
         }
     }
 
@@ -136,7 +139,8 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     {
         const enum_ = schemaObject.enum;
         if (enum_ !== undefined) {
-            return { ref: "string" };
+            return { ref: "string" }
+            // return { union: enum_.map(v => ({ const: v })) };
         }
     }
 
@@ -168,6 +172,8 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
 
     // simple types
     switch (schemaObject.type) {
+        case "array":
+            return { ref: "any[]" };
         case "string":
             return { ref: "string" };
         case "integer":

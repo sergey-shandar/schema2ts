@@ -42,7 +42,7 @@ type SchemaObject = {
     };
     readonly propertyNames?: SchemaObject;
     readonly const?: {};
-    readonly enum?: {};
+    readonly enum?: any[];
     readonly type?: simpleTypes|simpleTypes[];
     readonly format?: string;
     readonly allOf?: schemaArray;
