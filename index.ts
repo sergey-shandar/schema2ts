@@ -107,34 +107,42 @@ const main = "SchemaObject";
 const definitionsUri = "#/definitions/";
 
 function onlyOne<T>(a: T|undefined, b: T|undefined) {
-    return a !== undefined ? a : b;
+    return a !== undefined ? a : b
 }
 
 function allOfSchema(a: SchemaObject, b: SchemaObject): SchemaObject {
     return {
         $ref: onlyOne(a.$ref, b.$ref),
         default: onlyOne(a.default, b.default)
-    };
+    }
 }
 
 function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     if (schemaObject === undefined) {
-        return { ref: "any" };
+        return { ref: "any" }
     }
+    const types = createType0(schemaObject)
+    return types.length === 1
+        ? types[0]
+        : { union: types }
+}
 
+function createType0(schemaObject: SchemaObject): Ts.Type[] {
+    /*
     if (typeof schemaObject === "boolean") {
         return { ref: "any" };
     }
+    */
 
     // $ref
     {
         const $ref = schemaObject.$ref;
         if ($ref !== undefined) {
-            if ($ref === "#") return { ref: main };
+            if ($ref === "#") return [{ ref: main }];
             if ($ref.startsWith(definitionsUri)) {
-                return { ref: $ref.substr(definitionsUri.length) };
+                return [{ ref: $ref.substr(definitionsUri.length) }];
             }
-            return { ref: "any" };
+            return [{ ref: "any" }];
         }
     }    
 
@@ -142,7 +150,7 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     {
         const enum_ = schemaObject.enum;
         if (enum_ !== undefined) {
-            return { union: enum_.map(v => ({ const: v })) };
+            return enum_.map(v => ({ const: v }));
         }
     }
 
@@ -150,34 +158,35 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     {
         const anyOf = schemaObject.anyOf;
         if (anyOf !== undefined) {
-            return { union: anyOf.map(createType) };
+            return anyOf.map(createType);
         }
     }
 
     // allOf
     {
-        const allOf = schemaObject.allOf;
+        const allOf = schemaObject.allOf
         if (allOf !== undefined) {
-            return createType(allOf.reduce(allOfSchema));
+            return [createType(allOf.reduce(allOfSchema))]
         }
     }
 
     // items
     {
-        const items = schemaObject.items;
+        const items = schemaObject.items
         if (items !== undefined) {
-            return Array.isArray(items) 
+            return [ Array.isArray(items) 
                 ? { tuple: items.map(createType) }
                 : { array: createType(items) }
+            ]
         }
     }
 
     const type = schemaObject.type;
     if (Array.isArray(type)) {
         // return { union: type.map(t => createType2(t, schemaObject)) };
-        return createType2(type[0], schemaObject)
+        return [createType2(type[0], schemaObject)]
     } else {
-        return createType2(type, schemaObject)
+        return [createType2(type, schemaObject)]
     }
 }
 
