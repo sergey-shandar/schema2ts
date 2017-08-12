@@ -10,11 +10,11 @@ type SchemaObject = {
     readonly title?: string;
     readonly description?: string;
     readonly default?: {};
-    readonly multipleOf?: {};
-    readonly maximum?: {};
-    readonly exclusiveMaximum?: {};
-    readonly minimum?: {};
-    readonly exclusiveMinimum?: {};
+    readonly multipleOf?: number;
+    readonly maximum?: number;
+    readonly exclusiveMaximum?: number;
+    readonly minimum?: number;
+    readonly exclusiveMinimum?: number;
     readonly maxLength?: nonNegativeInteger;
     readonly minLength?: nonNegativeIntegerDefault0;
     readonly pattern?: string;

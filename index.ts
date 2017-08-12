@@ -198,13 +198,14 @@ function createType2(type: string|undefined, schemaObject: SchemaObject): Ts.Typ
     // simple types
     switch (type) {
         case "array":
-            return { ref: "any[]" };
+            return { ref: "any[]" }
         case "string":
-            return { ref: "string" };
+            return { ref: "string" }
         case "integer":
-            return { ref: "number" };
+        case "number":
+            return { ref: "number" }
         case "boolean":
-            return { ref: "boolean" };
+            return { ref: "boolean" }
     }
 
     // object
