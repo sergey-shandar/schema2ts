@@ -1,8 +1,8 @@
-export type schemaArray = Schema[];
-export type nonNegativeInteger = number;
-export type nonNegativeIntegerDefault0 = nonNegativeInteger;
-export type simpleTypes = "array"|"boolean"|"integer"|"null"|"number"|"object"|"string";
-export type stringArray = string[];
+export type SchemaArray = Schema[];
+export type NonNegativeInteger = number;
+export type NonNegativeIntegerDefault0 = NonNegativeInteger;
+export type SimpleTypes = "array"|"boolean"|"integer"|"null"|"number"|"object"|"string";
+export type StringArray = string[];
 export type SchemaObject = {
     readonly $id?: string;
     readonly $schema?: string;
@@ -15,18 +15,18 @@ export type SchemaObject = {
     readonly exclusiveMaximum?: number;
     readonly minimum?: number;
     readonly exclusiveMinimum?: number;
-    readonly maxLength?: nonNegativeInteger;
-    readonly minLength?: nonNegativeIntegerDefault0;
+    readonly maxLength?: NonNegativeInteger;
+    readonly minLength?: NonNegativeIntegerDefault0;
     readonly pattern?: string;
     readonly additionalItems?: Schema;
-    readonly items?: Schema|schemaArray;
-    readonly maxItems?: nonNegativeInteger;
-    readonly minItems?: nonNegativeIntegerDefault0;
+    readonly items?: Schema|SchemaArray;
+    readonly maxItems?: NonNegativeInteger;
+    readonly minItems?: NonNegativeIntegerDefault0;
     readonly uniqueItems?: boolean;
     readonly contains?: Schema;
-    readonly maxProperties?: nonNegativeInteger;
-    readonly minProperties?: nonNegativeIntegerDefault0;
-    readonly required?: stringArray;
+    readonly maxProperties?: NonNegativeInteger;
+    readonly minProperties?: NonNegativeIntegerDefault0;
+    readonly required?: StringArray;
     readonly additionalProperties?: Schema;
     readonly definitions?: {
         readonly [_:string]: Schema;
@@ -38,16 +38,16 @@ export type SchemaObject = {
         readonly [_:string]: Schema;
     };
     readonly dependencies?: {
-        readonly [_:string]: Schema|stringArray;
+        readonly [_:string]: Schema|StringArray;
     };
     readonly propertyNames?: Schema;
     readonly const?: {};
     readonly enum?: any[];
-    readonly type?: simpleTypes|simpleTypes[];
+    readonly type?: SimpleTypes|SimpleTypes[];
     readonly format?: string;
-    readonly allOf?: schemaArray;
-    readonly anyOf?: schemaArray;
-    readonly oneOf?: schemaArray;
+    readonly allOf?: SchemaArray;
+    readonly anyOf?: SchemaArray;
+    readonly oneOf?: SchemaArray;
     readonly not?: Schema;
 };
 export type Schema = boolean|SchemaObject;

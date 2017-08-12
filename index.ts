@@ -91,7 +91,12 @@ namespace Ts {
         } else if (t.union !== undefined) {
             yield *join(t.union.map(type), "|"), "(", ")";
         } else if (t.array !== undefined) {
-            yield *wrap(type(t.array), "", "[]");
+            const item = type(t.array); 
+            if (t.array.union !== undefined) {
+                yield *wrap(item, "(", ")[]");
+            } else {
+                yield *wrap(item, "", "[]");
+            }            
         } else if (t.tuple !== undefined) {
             yield *wrap(join(t.tuple.map(type), ","), "[", "]");
         } else if (t.const !== undefined) {
@@ -100,7 +105,7 @@ namespace Ts {
     }
 
     export function* typeAlias(t: TypeAlias) {
-        yield* wrap(type(t.type), "export type " + t.name + " = ", ";");
+        yield* wrap(type(t.type), "export type " + typeName(t.name) + " = ", ";");
     }
     export function* module(m: Module) {
         for (const i of m) {
@@ -109,7 +114,8 @@ namespace Ts {
     }
 }
 
-const main = "Schema";
+// const name = "swagger20";
+const name = "schema";
 
 const definitionsUri = "#/definitions/";
 
@@ -143,9 +149,9 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const $ref = schemaObject.$ref;
         if ($ref !== undefined) {
-            if ($ref === "#") return [{ ref: main }];
+            if ($ref === "#") return [{ ref: typeName(name) }];
             if ($ref.startsWith(definitionsUri)) {
-                return [{ ref: $ref.substr(definitionsUri.length) }];
+                return [{ ref: typeName($ref.substr(definitionsUri.length)) }];
             }
             return [{ ref: "any" }];
         }
@@ -195,6 +201,14 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     }
 }
 
+function typeName(name: string): string {
+    return name[0].toUpperCase() + name.substr(1);
+}
+
+function propertyName(name: string): string {
+    return name;
+}
+
 function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {    
     // simple types
     switch (type) {
@@ -210,11 +224,16 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     }
 
     // object
+    const required = schemaObject.required === undefined ? [] : schemaObject.required;
     const schemaProperties = schemaObject.properties;
     let properties: Ts.Property[] = schemaProperties !== undefined 
         ? Object
             .keys(schemaProperties)
-            .map(name => ({ name: name + "?", type: createType(schemaProperties[name]) }))
+            .map(name => ({ 
+                name: propertyName(name) 
+                    + (required.find(r => r === name) === undefined ? "?" : ""), 
+                type: createType(schemaProperties[name]) 
+            }))
         : [];
     const additionalProperties = schemaObject.additionalProperties;
     if (additionalProperties !== undefined) {
@@ -222,8 +241,6 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     }
     return { interface: properties };
 }
-
-const schema : X.SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
 
 function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
     const types = createType0(schema);
@@ -236,12 +253,14 @@ function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
             { 
                 name: name, 
                 type: { 
-                    union: types.filter((_, i) => i > 0).concat({ ref: objectName })
+                    union: types.filter((_, i) => i > 0).concat({ ref: typeName(objectName) })
                 }
             }
         ]
     }
 }
+
+const schema : X.SchemaObject = JSON.parse(fs.readFileSync(name + ".json").toString());
 
 const schemaDefinitions = schema.definitions;
 
@@ -251,10 +270,10 @@ const definitions = schemaDefinitions !== undefined
         .map(name => createTypeAliases(name, schemaDefinitions[name]))
     : [];
 
-const result = definitions.concat([createTypeAliases(main, schema)]);
+const result = definitions.concat([createTypeAliases(name, schema)]);
 
 let text = "";
 for (const line of Ts.module(flatten(result))) {
     text += line + os.EOL;
 }
-fs.writeFileSync("schema.d.ts", text);
+fs.writeFileSync(name + ".d.ts", text);
