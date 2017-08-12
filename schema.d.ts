@@ -22,7 +22,7 @@ type SchemaObject = {
     readonly items?: SchemaObject|schemaArray;
     readonly maxItems?: nonNegativeInteger;
     readonly minItems?: nonNegativeIntegerDefault0;
-    readonly uniqueItems?: {};
+    readonly uniqueItems?: boolean;
     readonly contains?: SchemaObject;
     readonly maxProperties?: nonNegativeInteger;
     readonly minProperties?: nonNegativeIntegerDefault0;

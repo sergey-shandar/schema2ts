@@ -122,10 +122,9 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
         return { ref: "any" };
     }
 
-    return createType2(schemaObject);
-}
-
-function createType2(schemaObject: SchemaObject): Ts.Type {    
+    if (typeof schemaObject === "boolean") {
+        return { ref: "any" };
+    }
 
     // $ref
     {
@@ -137,7 +136,7 @@ function createType2(schemaObject: SchemaObject): Ts.Type {
             }
             return { ref: "any" };
         }
-    }
+    }    
 
     // enum
     {
@@ -169,18 +168,30 @@ function createType2(schemaObject: SchemaObject): Ts.Type {
         if (items !== undefined) {
             return Array.isArray(items) 
                 ? { tuple: items.map(createType) }
-                : { array: createType(items) };
+                : { array: createType(items) }
         }
     }
 
+    const type = schemaObject.type;
+    if (Array.isArray(type)) {
+        // return { union: type.map(t => createType2(t, schemaObject)) };
+        return createType2(type[0], schemaObject)
+    } else {
+        return createType2(type, schemaObject)
+    }
+}
+
+function createType2(type: string|undefined, schemaObject: SchemaObject): Ts.Type {    
     // simple types
-    switch (schemaObject.type) {
+    switch (type) {
         case "array":
             return { ref: "any[]" };
         case "string":
             return { ref: "string" };
         case "integer":
             return { ref: "number" };
+        case "boolean":
+            return { ref: "boolean" };
     }
 
     // object
