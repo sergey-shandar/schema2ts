@@ -108,7 +108,7 @@ namespace Ts {
     }
 }
 
-const main = "SchemaObject";
+const main = "Schema";
 
 const definitionsUri = "#/definitions/";
 
@@ -123,22 +123,20 @@ function allOfSchema(a: SchemaObject, b: SchemaObject): SchemaObject {
     }
 }
 
-function createType(schemaObject: SchemaObject|undefined): Ts.Type {
-    if (schemaObject === undefined) {
+function createType(schema: Schema|undefined): Ts.Type {
+    if (schema === undefined) {
         return { ref: "any" }
     }
-    const types = createType0(schemaObject)
+    const types = createType0(schema)
     return types.length === 1
         ? types[0]
         : { union: types }
 }
 
-function createType0(schemaObject: SchemaObject): Ts.Type[] {
-    /*
+function createType0(schemaObject: Schema): Ts.Type[] {
     if (typeof schemaObject === "boolean") {
-        return { ref: "any" };
+        return [{ ref: "any" }];
     }
-    */
 
     // $ref
     {
@@ -189,8 +187,8 @@ function createType0(schemaObject: SchemaObject): Ts.Type[] {
 
     const type = schemaObject.type;
     if (Array.isArray(type)) {
-        // return { union: type.map(t => createType2(t, schemaObject)) };
-        return [createType2(type[0], schemaObject)]
+        return type.map(t => createType2(t, schemaObject));
+        // return [createType2(type[0], schemaObject)]
     } else {
         return [createType2(type, schemaObject)]
     }
@@ -223,9 +221,9 @@ function createType2(type: string|undefined, schemaObject: SchemaObject): Ts.Typ
     return { interface: properties };
 }
 
-const schemaObject : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
+const schema : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
 
-function createTypeAliases(name: string, schema: SchemaObject): Ts.TypeAlias[] {
+function createTypeAliases(name: string, schema: Schema): Ts.TypeAlias[] {
     const types = createType0(schema);
     if (types.length === 1) {
         return [{ name: name, type: types[0]}]
@@ -243,7 +241,7 @@ function createTypeAliases(name: string, schema: SchemaObject): Ts.TypeAlias[] {
     }
 }
 
-const schemaDefinitions = schemaObject.definitions;
+const schemaDefinitions = schema.definitions;
 
 const definitions = schemaDefinitions !== undefined
     ? Object
@@ -251,7 +249,7 @@ const definitions = schemaDefinitions !== undefined
         .map(name => createTypeAliases(name, schemaDefinitions[name]))
     : [];
 
-const result = definitions.concat([createTypeAliases(main, schemaObject)]);
+const result = definitions.concat([createTypeAliases(main, schema)]);
 
 let text = "";
 for (const line of Ts.module(flatten(result))) {

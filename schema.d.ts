@@ -1,4 +1,4 @@
-type schemaArray = SchemaObject[];
+type schemaArray = Schema[];
 type nonNegativeInteger = number;
 type nonNegativeIntegerDefault0 = nonNegativeInteger;
 type simpleTypes = "array"|"boolean"|"integer"|"null"|"number"|"object"|"string";
@@ -18,29 +18,29 @@ type SchemaObject = {
     readonly maxLength?: nonNegativeInteger;
     readonly minLength?: nonNegativeIntegerDefault0;
     readonly pattern?: string;
-    readonly additionalItems?: SchemaObject;
-    readonly items?: SchemaObject|schemaArray;
+    readonly additionalItems?: Schema;
+    readonly items?: Schema|schemaArray;
     readonly maxItems?: nonNegativeInteger;
     readonly minItems?: nonNegativeIntegerDefault0;
     readonly uniqueItems?: boolean;
-    readonly contains?: SchemaObject;
+    readonly contains?: Schema;
     readonly maxProperties?: nonNegativeInteger;
     readonly minProperties?: nonNegativeIntegerDefault0;
     readonly required?: stringArray;
-    readonly additionalProperties?: SchemaObject;
+    readonly additionalProperties?: Schema;
     readonly definitions?: {
-        readonly [_:string]: SchemaObject;
+        readonly [_:string]: Schema;
     };
     readonly properties?: {
-        readonly [_:string]: SchemaObject;
+        readonly [_:string]: Schema;
     };
     readonly patternProperties?: {
-        readonly [_:string]: SchemaObject;
+        readonly [_:string]: Schema;
     };
     readonly dependencies?: {
-        readonly [_:string]: SchemaObject|stringArray;
+        readonly [_:string]: Schema|stringArray;
     };
-    readonly propertyNames?: SchemaObject;
+    readonly propertyNames?: Schema;
     readonly const?: {};
     readonly enum?: any[];
     readonly type?: simpleTypes|simpleTypes[];
@@ -48,5 +48,6 @@ type SchemaObject = {
     readonly allOf?: schemaArray;
     readonly anyOf?: schemaArray;
     readonly oneOf?: schemaArray;
-    readonly not?: SchemaObject;
+    readonly not?: Schema;
 };
+type Schema = boolean|SchemaObject;
