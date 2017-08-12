@@ -33,7 +33,7 @@ function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<stri
         let first = true;
         for (const v of i) {
             if (first) {
-                previous = (previous === undefined ? "" : previous) + v;
+                previous = previous === undefined ? v : previous + v;
                 first = false;
             } else {
                 if (previous !== undefined) {
@@ -137,6 +137,14 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
         }
     }
 
+    // allOf
+    {
+        const allOf = schemaObject.allOf;
+        if (allOf !== undefined) {
+            
+        }
+    }
+
     // items
     {
         const items = schemaObject.items;
@@ -147,9 +155,12 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
         }
     }
 
+    // simple types
     switch (schemaObject.type) {
         case "string":
             return { ref: "string" };
+        case "integer":
+            return { ref: "number" };
     }
 
     // object

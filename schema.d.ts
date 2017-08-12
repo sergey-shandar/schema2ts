@@ -1,5 +1,5 @@
 type schemaArray = SchemaObject[];
-type nonNegativeInteger = {};
+type nonNegativeInteger = number;
 type nonNegativeIntegerDefault0 = {};
 type simpleTypes = string;
 type stringArray = string[];
