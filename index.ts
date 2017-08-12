@@ -139,8 +139,7 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     {
         const enum_ = schemaObject.enum;
         if (enum_ !== undefined) {
-            return { ref: "string" }
-            // return { union: enum_.map(v => ({ const: v })) };
+            return { union: enum_.map(v => ({ const: v })) };
         }
     }
 

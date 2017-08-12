@@ -1,7 +1,7 @@
 type schemaArray = SchemaObject[];
 type nonNegativeInteger = number;
 type nonNegativeIntegerDefault0 = nonNegativeInteger;
-type simpleTypes = string;
+type simpleTypes = "array"|"boolean"|"integer"|"null"|"number"|"object"|"string";
 type stringArray = string[];
 type SchemaObject = {
     readonly $id?: string;
