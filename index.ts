@@ -22,17 +22,23 @@ function* indent(i: IterableIterator<string>) {
     }
 }
 
-function* join(ii: Iterable<Iterable<string>>, separator: string) {
-    let previous = undefined;
+function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
+    let previous : string|undefined = undefined;
     for (const i of ii) {
         if (previous !== undefined) {
             previous += separator;
         }
+        let first = true;
         for (const v of i) {
-            if (previous !== undefined) {
-                yield previous;
+            if (first) {
+                previous = (previous === undefined ? "" : previous) + v;
+                first = false;
+            } else {
+                if (previous !== undefined) {
+                    yield previous;
+                }
+                previous = v;
             }
-            previous = v;
         }
     }
     if (previous !== undefined) {
