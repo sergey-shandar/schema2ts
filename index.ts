@@ -118,10 +118,14 @@ function allOfSchema(a: SchemaObject, b: SchemaObject): SchemaObject {
 }
 
 function createType(schemaObject: SchemaObject|undefined): Ts.Type {
-    
     if (schemaObject === undefined) {
         return { ref: "any" };
     }
+
+    return createType2(schemaObject);
+}
+
+function createType2(schemaObject: SchemaObject): Ts.Type {    
 
     // $ref
     {
