@@ -219,6 +219,24 @@ function createType2(type: string|undefined, schemaObject: SchemaObject): Ts.Typ
 
 const schemaObject : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
 
+function createTypeAliases(name: string, schema: SchemaObject): Ts.TypeAlias[] {
+    const types = createType0(schema);
+    if (types.length === 1) {
+        return [{ name: name, type: types[0]}]
+    } else {
+        const objectName = name + "Object";
+        return [
+            { name: objectName, type: types[0] },
+            { 
+                name: name, 
+                type: { 
+                    union: types.filter((_, i) => i > 0).concat({ ref: objectName })
+                }
+            }
+        ]
+    }
+}
+
 function createTypeAlias(name: string, schema: SchemaObject): Ts.TypeAlias {
     return { 
         name: name,
