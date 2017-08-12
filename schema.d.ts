@@ -1,14 +1,9 @@
 
-type schemaArray = {
-}
-type nonNegativeInteger = {
-}
-type nonNegativeIntegerDefault0 = {
-}
-type simpleTypes = {
-}
-type stringArray = {
-}
+type schemaArray = {};
+type nonNegativeInteger = {};
+type nonNegativeIntegerDefault0 = {};
+type simpleTypes = {};
+type stringArray = {};
 type SchemaObject = {
     readonly $id?: string;
     readonly $schema?: string;
@@ -25,7 +20,7 @@ type SchemaObject = {
     readonly minLength?: nonNegativeIntegerDefault0;
     readonly pattern?: string;
     readonly additionalItems?: SchemaObject;
-    readonly items?: (SchemaObject|schemaArray);
+    readonly items?: (any);
     readonly maxItems?: nonNegativeInteger;
     readonly minItems?: nonNegativeIntegerDefault0;
     readonly uniqueItems?: boolean;
@@ -34,17 +29,25 @@ type SchemaObject = {
     readonly minProperties?: nonNegativeIntegerDefault0;
     readonly required?: stringArray;
     readonly additionalProperties?: SchemaObject;
-    readonly definitions?: {readonly[_:string]:SchemaObject;};
-    readonly properties?: {readonly[_:string]:SchemaObject;};
-    readonly patternProperties?: {readonly[_:string]:SchemaObject;};
-    readonly dependencies?: {readonly[_:string]:(SchemaObject|stringArray);};
+    readonly definitions?: {
+        readonly [_:string]: SchemaObject;
+    };
+    readonly properties?: {
+        readonly [_:string]: SchemaObject;
+    };
+    readonly patternProperties?: {
+        readonly [_:string]: SchemaObject;
+    };
+    readonly dependencies?: {
+        readonly [_:string]: (any);
+    };
     readonly propertyNames?: SchemaObject;
     readonly const?: {};
     readonly enum?: any[];
-    readonly type?: (simpleTypes|simpleTypes[]);
+    readonly type?: (any);
     readonly format?: string;
     readonly allOf?: schemaArray;
     readonly anyOf?: schemaArray;
     readonly oneOf?: schemaArray;
     readonly not?: SchemaObject;
-}
+};
