@@ -103,6 +103,17 @@ const main = "SchemaObject";
 
 const definitionsUri = "#/definitions/";
 
+function onlyOne<T>(a: T|undefined, b: T|undefined) {
+    return a !== undefined ? a : b;
+}
+
+function allOfSchema(a: SchemaObject, b: SchemaObject): SchemaObject {
+    return {
+        $ref: onlyOne(a.$ref, b.$ref),
+        default: onlyOne(a.default, b.default)
+    };
+}
+
 function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     
     if (schemaObject === undefined) {
@@ -141,7 +152,7 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     {
         const allOf = schemaObject.allOf;
         if (allOf !== undefined) {
-            
+            return createType(allOf.reduce(allOfSchema));
         }
     }
 
