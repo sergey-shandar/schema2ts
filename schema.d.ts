@@ -1,15 +1,15 @@
 
-interface schemaArray{
+type schemaArray = {
 }
-interface nonNegativeInteger{
+type nonNegativeInteger = {
 }
-interface nonNegativeIntegerDefault0{
+type nonNegativeIntegerDefault0 = {
 }
-interface simpleTypes{
+type simpleTypes = {
 }
-interface stringArray{
+type stringArray = {
 }
-interface SchemaObject{
+type SchemaObject = {
     readonly $id?: string;
     readonly $schema?: string;
     readonly $ref?: string;

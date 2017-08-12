@@ -2,26 +2,32 @@ import * as fs from "fs";
 import * as os from "os";
 
 namespace Ts {
-    export interface Property {
+    export type Property = {
         readonly name: string;
         readonly type: string;
     }
     export type Properties = Property[];
-    export interface Interface {
+    export type Interface = {
         readonly name: string;
-        readonly properties: Properties;
+        readonly properties: Properties;        
     }
-    export type Module = Interface[];
-    export function* interface_(i: Interface) {
-        yield "interface " + i.name + "{"
-        for (const p of i.properties) {
-            yield "    readonly " + p.name + "?: " + p.type + ";"
+    export type Type = {
+        readonly interface?: Interface;
+    }
+    export type Module = Type[];
+    export function* type(t: Type) {
+        const i = t.interface;
+        if (i !== undefined) {
+            yield "type " + i.name + " = {"
+            for (const p of i.properties) {
+                yield "    readonly " + p.name + "?: " + p.type + ";"
+            }
+            yield "}";
         }
-        yield "}";
     }
     export function* module(m: Module) {
         for (const i of m) {
-            yield* interface_(i);
+            yield* type(i);
         }
     }
 }
@@ -92,7 +98,7 @@ function createProperties(properties: {readonly[_:string]: SchemaObject}|undefin
 }
 
 function createDefinition(name: string, schema: SchemaObject) {
-    return {name: name, properties: createProperties(schema.properties)};
+    return { interface: {name: name, properties: createProperties(schema.properties)} };
 }
 
 const schemaDefinitions = schemaObject.definitions;
