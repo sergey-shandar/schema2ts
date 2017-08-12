@@ -48,6 +48,12 @@ function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<stri
     }
 }
 
+function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
+    for (const i of ii) {
+        yield* i;
+    }
+}
+
 namespace Ts {
     export interface Property {
         readonly name: string;
@@ -66,7 +72,7 @@ namespace Ts {
         readonly name: string;
         readonly type: Type;
     }
-    export type Module = TypeAlias[];
+    export type Module = Iterable<TypeAlias>;
 
     export function* type(t: Type): IterableIterator<string> {
         if (t.ref !== undefined) {            
@@ -150,7 +156,7 @@ function createType0(schemaObject: SchemaObject): Ts.Type[] {
     {
         const enum_ = schemaObject.enum;
         if (enum_ !== undefined) {
-            return enum_.map(v => ({ const: v }));
+            return [{ union: enum_.map(v => ({ const: v })) }];
         }
     }
 
@@ -158,7 +164,7 @@ function createType0(schemaObject: SchemaObject): Ts.Type[] {
     {
         const anyOf = schemaObject.anyOf;
         if (anyOf !== undefined) {
-            return anyOf.map(createType);
+            return [{ union: anyOf.map(createType) }];
         }
     }
 
@@ -237,25 +243,18 @@ function createTypeAliases(name: string, schema: SchemaObject): Ts.TypeAlias[] {
     }
 }
 
-function createTypeAlias(name: string, schema: SchemaObject): Ts.TypeAlias {
-    return { 
-        name: name,
-        type: createType(schema)
-    };
-}
-
 const schemaDefinitions = schemaObject.definitions;
 
 const definitions = schemaDefinitions !== undefined
     ? Object
         .keys(schemaDefinitions)
-        .map(name => createTypeAlias(name, schemaDefinitions[name]))
+        .map(name => createTypeAliases(name, schemaDefinitions[name]))
     : [];
 
-const result = definitions.concat(createTypeAlias(main, schemaObject));
+const result = definitions.concat([createTypeAliases(main, schemaObject)]);
 
 let text = "";
-for (const line of Ts.module(result)) {
+for (const line of Ts.module(flatten(result))) {
     text += line + os.EOL;
 }
 fs.writeFileSync("schema.d.ts", text);
