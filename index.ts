@@ -23,25 +23,35 @@ namespace Ts {
 
 // http://json-schema.org/schema
 
-interface SchemaObjectMap {
-    readonly [name: string]: SchemaObject;
-}
-
 interface SchemaObject {
     readonly $id?: string;
     readonly $ref?: string;
     readonly type?: string;
-    readonly properties?: SchemaObjectMap;
+    readonly anyOf?: SchemaObject[];
+    readonly properties?: {readonly [name: string]: SchemaObject};
     readonly additionalProperties?: SchemaObject;
 }
 
 const main = "SchemaObject";
 
-function createType(schemaObject: SchemaObject) {
-    const $ref = schemaObject.$ref;
-    if ($ref !== undefined) {
-        return $ref === "#" ? main : "any";
+function createType(schemaObject: SchemaObject): string {
+    
+    // $ref
+    {
+        const $ref = schemaObject.$ref;
+        if ($ref !== undefined) {
+            return $ref === "#" ? main : "any";
+        }
     }
+
+    // anyOf
+    {
+        const anyOf = schemaObject.anyOf;
+        if (anyOf !== undefined) {
+            return anyOf.map(createType).join("|");
+        }
+    }
+
     const type = schemaObject.type === undefined ? "object" : schemaObject.type;
     switch (type) {
         case "object":
@@ -54,6 +64,7 @@ function createType(schemaObject: SchemaObject) {
         case "array":
             return "any[]";
     }
+
     return type;
 }
 

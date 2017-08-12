@@ -15,7 +15,7 @@ interface SchemaObject{
     readonly minLength?: any;
     readonly pattern?: string;
     readonly additionalItems?: SchemaObject;
-    readonly items?: {};
+    readonly items?: SchemaObject|any;
     readonly maxItems?: any;
     readonly minItems?: any;
     readonly uniqueItems?: boolean;
@@ -27,11 +27,11 @@ interface SchemaObject{
     readonly definitions?: {readonly[_:string]:SchemaObject;};
     readonly properties?: {readonly[_:string]:SchemaObject;};
     readonly patternProperties?: {readonly[_:string]:SchemaObject;};
-    readonly dependencies?: {readonly[_:string]:{};};
+    readonly dependencies?: {readonly[_:string]:SchemaObject|any;};
     readonly propertyNames?: SchemaObject;
     readonly const?: {};
     readonly enum?: any[];
-    readonly type?: {};
+    readonly type?: any|any[];
     readonly format?: string;
     readonly allOf?: any;
     readonly anyOf?: any;
