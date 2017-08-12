@@ -2,23 +2,40 @@ import * as fs from "fs";
 import * as os from "os";
 
 namespace Ts {
-    export type Property = {
+    export interface Property {
         readonly name: string;
         readonly type: string;
     }
     export type Properties = Property[];
-    export type Interface = {
-        readonly name: string;
+    export interface Interface {        
         readonly properties: Properties;        
     }
-    export type Type = {
+    export interface Type {
+        readonly ref?: string;
         readonly interface?: Interface;
     }
-    export type Module = Type[];
-    export function* type(t: Type) {
-        const i = t.interface;
+    export interface TypeAlias {
+        readonly name: string;
+        readonly type: Type;
+    }
+    export type Module = TypeAlias[];
+
+    export function* type(t: Type) {        
+        if (t.ref !== undefined) {
+            yield t.ref;
+        } else if(t.interface !== undefined) {
+            yield "{"
+            for (const p of t.interface.properties) {
+                yield "    readonly " + p.name + "?: " + p.type + ";"
+            }
+            yield "}";
+        }
+    }
+
+    export function* typeAlias(t: TypeAlias) {
+        const i = t.type.interface;
         if (i !== undefined) {
-            yield "type " + i.name + " = {"
+            yield "type " + t.name + " = {"
             for (const p of i.properties) {
                 yield "    readonly " + p.name + "?: " + p.type + ";"
             }
@@ -27,7 +44,7 @@ namespace Ts {
     }
     export function* module(m: Module) {
         for (const i of m) {
-            yield* type(i);
+            yield* typeAlias(i);
         }
     }
 }
@@ -97,8 +114,15 @@ function createProperties(properties: {readonly[_:string]: SchemaObject}|undefin
         : [];
 }
 
-function createDefinition(name: string, schema: SchemaObject) {
-    return { interface: {name: name, properties: createProperties(schema.properties)} };
+function createTypeAlias(name: string, schema: SchemaObject): Ts.TypeAlias {
+    return { 
+        name: name,
+        type: {
+            interface: { 
+                properties: createProperties(schema.properties)
+            }
+        }
+    };
 }
 
 const schemaDefinitions = schemaObject.definitions;
@@ -106,10 +130,10 @@ const schemaDefinitions = schemaObject.definitions;
 const definitions = schemaDefinitions !== undefined
     ? Object
         .keys(schemaDefinitions)
-        .map(name => createDefinition(name, schemaDefinitions[name]))
+        .map(name => createTypeAlias(name, schemaDefinitions[name]))
     : [];
 
-const result = definitions.concat(createDefinition(main, schemaObject));
+const result = definitions.concat(createTypeAlias(main, schemaObject));
 
 let text = "";
 for (const line of Ts.module(result)) {
