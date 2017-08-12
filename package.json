@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/sergey-shandar/schema2ts/issues"
   },
-  "homepage": "https://github.com/sergey-shandar/schema2ts#readme"
+  "homepage": "https://github.com/sergey-shandar/schema2ts#readme",
+  "devDependencies": {
+    "typescript": "^2.4.2"
+  }
 }
