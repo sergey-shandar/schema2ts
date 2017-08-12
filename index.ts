@@ -59,6 +59,7 @@ namespace Ts {
         readonly interface?: Interface;
         readonly union?: Type[];
         readonly array?: Type;
+        readonly tuple?: Type[];
     }
     export interface TypeAlias {
         readonly name: string;
@@ -83,6 +84,8 @@ namespace Ts {
             yield *join(t.union.map(type), "|"), "(", ")";
         } else if (t.array !== undefined) {
             yield *wrap(type(t.array), "", "[]");
+        } else if (t.tuple !== undefined) {
+            yield *wrap(join(t.tuple.map(type), ","), "[", "]");
         }
     }
 
@@ -106,7 +109,7 @@ interface SchemaObject {
     readonly definitions?: {readonly [_:string]: SchemaObject};
     readonly properties?: {readonly [_:string]: SchemaObject};
     readonly additionalProperties?: SchemaObject;
-    readonly items?: SchemaObject;
+    readonly items?: SchemaObject|SchemaObject[];
     readonly enum?: string[];
 }
 
@@ -152,7 +155,9 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
     {
         const items = schemaObject.items;
         if (items !== undefined) {
-            return { array: createType(items) };
+            return Array.isArray(items) 
+                ? { tuple: items.map(createType) }
+                : { array: createType(items) };
         }
     }
 
