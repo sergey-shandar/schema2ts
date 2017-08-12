@@ -1,0 +1,24 @@
+{
+  "name": "schema2ts",
+  "version": "0.0.0",
+  "description": "JSON Schema to TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergey-shandar/schema2ts.git"
+  },
+  "keywords": [
+    "json",
+    "schema",
+    "typescript"
+  ],
+  "author": "Sergey Shandar",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/sergey-shandar/schema2ts/issues"
+  },
+  "homepage": "https://github.com/sergey-shandar/schema2ts#readme"
+}
