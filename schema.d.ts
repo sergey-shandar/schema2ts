@@ -1,9 +1,9 @@
-type schemaArray = Schema[];
-type nonNegativeInteger = number;
-type nonNegativeIntegerDefault0 = nonNegativeInteger;
-type simpleTypes = "array"|"boolean"|"integer"|"null"|"number"|"object"|"string";
-type stringArray = string[];
-type SchemaObject = {
+export type schemaArray = Schema[];
+export type nonNegativeInteger = number;
+export type nonNegativeIntegerDefault0 = nonNegativeInteger;
+export type simpleTypes = "array"|"boolean"|"integer"|"null"|"number"|"object"|"string";
+export type stringArray = string[];
+export type SchemaObject = {
     readonly $id?: string;
     readonly $schema?: string;
     readonly $ref?: string;
@@ -50,4 +50,4 @@ type SchemaObject = {
     readonly oneOf?: schemaArray;
     readonly not?: Schema;
 };
-type Schema = boolean|SchemaObject;
+export type Schema = boolean|SchemaObject;

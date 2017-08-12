@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as os from "os";
+import X = require("./schema");
 
 function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     let previous: string|undefined = undefined;
@@ -99,7 +100,7 @@ namespace Ts {
     }
 
     export function* typeAlias(t: TypeAlias) {
-        yield* wrap(type(t.type), "type " + t.name + " = ", ";");
+        yield* wrap(type(t.type), "export type " + t.name + " = ", ";");
     }
     export function* module(m: Module) {
         for (const i of m) {
@@ -116,14 +117,14 @@ function onlyOne<T>(a: T|undefined, b: T|undefined) {
     return a !== undefined ? a : b
 }
 
-function allOfSchema(a: SchemaObject, b: SchemaObject): SchemaObject {
+function allOfSchema(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
     return {
         $ref: onlyOne(a.$ref, b.$ref),
         default: onlyOne(a.default, b.default)
     }
 }
 
-function createType(schema: Schema|undefined): Ts.Type {
+function createType(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
         return { ref: "any" }
     }
@@ -133,7 +134,7 @@ function createType(schema: Schema|undefined): Ts.Type {
         : { union: types }
 }
 
-function createType0(schemaObject: Schema): Ts.Type[] {
+function createType0(schemaObject: X.Schema): Ts.Type[] {
     if (typeof schemaObject === "boolean") {
         return [{ ref: "any" }];
     }
@@ -194,7 +195,7 @@ function createType0(schemaObject: Schema): Ts.Type[] {
     }
 }
 
-function createType2(type: string|undefined, schemaObject: SchemaObject): Ts.Type {    
+function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {    
     // simple types
     switch (type) {
         case "array":
@@ -222,9 +223,9 @@ function createType2(type: string|undefined, schemaObject: SchemaObject): Ts.Typ
     return { interface: properties };
 }
 
-const schema : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
+const schema : X.SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
 
-function createTypeAliases(name: string, schema: Schema): Ts.TypeAlias[] {
+function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
     const types = createType0(schema);
     if (types.length === 1) {
         return [{ name: name, type: types[0]}]
