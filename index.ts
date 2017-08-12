@@ -13,6 +13,8 @@ function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     }
     if (previous !== undefined) {
         yield previous + suffix;
+    } else {
+        yield prefix + suffix;
     }
 }
 
@@ -64,8 +66,8 @@ namespace Ts {
     }
     export type Module = TypeAlias[];
 
-    export function* type(t: Type): IterableIterator<string> {        
-        if (t.ref !== undefined) {
+    export function* type(t: Type): IterableIterator<string> {
+        if (t.ref !== undefined) {            
             yield t.ref;
         } else if (t.interface !== undefined) {
             if (t.interface.length == 0) {
@@ -85,11 +87,7 @@ namespace Ts {
     }
 
     export function* typeAlias(t: TypeAlias) {
-        const array = [...type(t.type)];
-        const i = t.type.interface;
-        if (i !== undefined) {
-            yield* wrap(type(t.type), "type " + t.name + " = ", ";");
-        }
+        yield* wrap(type(t.type), "type " + t.name + " = ", ";");
     }
     export function* module(m: Module) {
         for (const i of m) {
@@ -103,12 +101,13 @@ namespace Ts {
 interface SchemaObject {
     readonly $id?: string;
     readonly $ref?: string;
-    readonly type?: string;
+    readonly type?: string|string[];
     readonly anyOf?: SchemaObject[];
     readonly definitions?: {readonly [_:string]: SchemaObject};
     readonly properties?: {readonly [_:string]: SchemaObject};
     readonly additionalProperties?: SchemaObject;
     readonly items?: SchemaObject;
+    readonly enum?: string[];
 }
 
 const main = "SchemaObject";
@@ -133,6 +132,14 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
         }
     }
 
+    // enum
+    {
+        const enum_ = schemaObject.enum;
+        if (enum_ !== undefined) {
+            return { ref: "string" };
+        }
+    }
+
     // anyOf
     {
         const anyOf = schemaObject.anyOf;
@@ -141,36 +148,39 @@ function createType(schemaObject: SchemaObject|undefined): Ts.Type {
         }
     }
 
-    const type = schemaObject.type === undefined ? "object" : schemaObject.type;
-    switch (type) {
-        case "object":
-            let properties: Ts.Property[] = [];
-            const additionalProperties = schemaObject.additionalProperties;
-            if (additionalProperties !== undefined) {
-                properties.push({ name: "[_:string]", type: createType(additionalProperties) });
-            }
-            return { interface: properties };
-        case "array":
-            return { array: createType(schemaObject.items) };
+    // items
+    {
+        const items = schemaObject.items;
+        if (items !== undefined) {
+            return { array: createType(items) };
+        }
     }
 
-    return { ref: type };
+    switch (schemaObject.type) {
+        case "string":
+            return { ref: "string" };
+    }
+
+    // object
+    const schemaProperties = schemaObject.properties;
+    let properties: Ts.Property[] = schemaProperties !== undefined 
+        ? Object
+            .keys(schemaProperties)
+            .map(name => ({ name: name + "?", type: createType(schemaProperties[name]) }))
+        : [];
+    const additionalProperties = schemaObject.additionalProperties;
+    if (additionalProperties !== undefined) {
+        properties.push({ name: "[_:string]", type: createType(additionalProperties) });
+    }
+    return { interface: properties };
 }
 
 const schemaObject : SchemaObject = JSON.parse(fs.readFileSync("schema.json").toString());
 
-function createProperties(properties: {readonly[_:string]: SchemaObject}|undefined) : Ts.Property[] {
-    return properties !== undefined 
-        ? Object.keys(properties).map(name => ({ name: name + "?", type: createType(properties[name]) }))
-        : [];
-}
-
 function createTypeAlias(name: string, schema: SchemaObject): Ts.TypeAlias {
     return { 
         name: name,
-        type: {
-            interface: createProperties(schema.properties)
-        }
+        type: createType(schema)
     };
 }
 
@@ -186,6 +196,6 @@ const result = definitions.concat(createTypeAlias(main, schemaObject));
 
 let text = "";
 for (const line of Ts.module(result)) {
-    text += os.EOL + line;
+    text += line + os.EOL;
 }
 fs.writeFileSync("schema.d.ts", text);

@@ -1,9 +1,8 @@
-
-type schemaArray = {};
+type schemaArray = SchemaObject[];
 type nonNegativeInteger = {};
 type nonNegativeIntegerDefault0 = {};
-type simpleTypes = {};
-type stringArray = {};
+type simpleTypes = string;
+type stringArray = string[];
 type SchemaObject = {
     readonly $id?: string;
     readonly $schema?: string;
@@ -11,11 +10,11 @@ type SchemaObject = {
     readonly title?: string;
     readonly description?: string;
     readonly default?: {};
-    readonly multipleOf?: number;
-    readonly maximum?: number;
-    readonly exclusiveMaximum?: number;
-    readonly minimum?: number;
-    readonly exclusiveMinimum?: number;
+    readonly multipleOf?: {};
+    readonly maximum?: {};
+    readonly exclusiveMaximum?: {};
+    readonly minimum?: {};
+    readonly exclusiveMinimum?: {};
     readonly maxLength?: nonNegativeInteger;
     readonly minLength?: nonNegativeIntegerDefault0;
     readonly pattern?: string;
@@ -23,7 +22,7 @@ type SchemaObject = {
     readonly items?: SchemaObject|schemaArray;
     readonly maxItems?: nonNegativeInteger;
     readonly minItems?: nonNegativeIntegerDefault0;
-    readonly uniqueItems?: boolean;
+    readonly uniqueItems?: {};
     readonly contains?: SchemaObject;
     readonly maxProperties?: nonNegativeInteger;
     readonly minProperties?: nonNegativeIntegerDefault0;
@@ -43,7 +42,7 @@ type SchemaObject = {
     };
     readonly propertyNames?: SchemaObject;
     readonly const?: {};
-    readonly enum?: any[];
+    readonly enum?: {};
     readonly type?: simpleTypes|simpleTypes[];
     readonly format?: string;
     readonly allOf?: schemaArray;
