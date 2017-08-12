@@ -99,20 +99,6 @@ namespace Ts {
     }
 }
 
-// http://json-schema.org/schema
-
-interface SchemaObject {
-    readonly $id?: string;
-    readonly $ref?: string;
-    readonly type?: string|string[];
-    readonly anyOf?: SchemaObject[];
-    readonly definitions?: {readonly [_:string]: SchemaObject};
-    readonly properties?: {readonly [_:string]: SchemaObject};
-    readonly additionalProperties?: SchemaObject;
-    readonly items?: SchemaObject|SchemaObject[];
-    readonly enum?: string[];
-}
-
 const main = "SchemaObject";
 
 const definitionsUri = "#/definitions/";
