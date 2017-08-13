@@ -242,14 +242,19 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
         if (additionalProperties !== false) {
             additionalPropertiesType = createType(additionalProperties);
         }
-    } else if (schemaProperties !== undefined) {
+    } else {
         additionalPropertiesType = { ref: "any" }
     }
 
     if (additionalPropertiesType === undefined) {
         const patternProperties = schemaObject.patternProperties
         if (patternProperties !== undefined) {
-            additionalPropertiesType = createType(patternProperties);
+            const types = Object
+                .keys(patternProperties)
+                .map(k => createType(patternProperties[k]))
+                .concat(properties.map(p => p.type))
+                .concat([{ ref: "undefined" }])
+            additionalPropertiesType = { union: types }
         }
     }
 

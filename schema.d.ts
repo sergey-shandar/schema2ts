@@ -9,7 +9,9 @@ export type SchemaObject = {
     readonly $ref?: string;
     readonly title?: string;
     readonly description?: string;
-    readonly default?: {};
+    readonly default?: {
+        readonly [_:string]: any;
+    };
     readonly multipleOf?: number;
     readonly maximum?: number;
     readonly exclusiveMaximum?: number;
@@ -41,7 +43,9 @@ export type SchemaObject = {
         readonly [_:string]: Schema|StringArray;
     };
     readonly propertyNames?: Schema;
-    readonly const?: {};
+    readonly const?: {
+        readonly [_:string]: any;
+    };
     readonly enum?: any[];
     readonly type?: SimpleTypes|SimpleTypes[];
     readonly format?: string;
