@@ -49,5 +49,6 @@ export type SchemaObject = {
     readonly anyOf?: SchemaArray;
     readonly oneOf?: SchemaArray;
     readonly not?: Schema;
+    readonly [_:string]: any;
 };
 export type Schema = boolean|SchemaObject;

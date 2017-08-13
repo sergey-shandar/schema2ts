@@ -142,7 +142,7 @@ function createType(schema: X.Schema|undefined): Ts.Type {
 
 function createType0(schemaObject: X.Schema): Ts.Type[] {
     if (typeof schemaObject === "boolean") {
-        return [{ ref: "any" }];
+        return [{ ref: schemaObject ? "any" : "never" }];
     }
 
     // $ref
@@ -195,7 +195,6 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     const type = schemaObject.type;
     if (Array.isArray(type)) {
         return type.map(t => createType2(t, schemaObject));
-        // return [createType2(type[0], schemaObject)]
     } else {
         return [createType2(type, schemaObject)]
     }
@@ -226,6 +225,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     // object
     const required = schemaObject.required === undefined ? [] : schemaObject.required;
     const schemaProperties = schemaObject.properties;
+    
     let properties: Ts.Property[] = schemaProperties !== undefined 
         ? Object
             .keys(schemaProperties)
@@ -234,12 +234,30 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
                     + (required.find(r => r === name) === undefined ? "?" : ""), 
                 type: createType(schemaProperties[name]) 
             }))
-        : [];
+        : []
+    
     const additionalProperties = schemaObject.additionalProperties;
+    let additionalPropertiesType : Ts.Type|undefined = undefined;
     if (additionalProperties !== undefined) {
-        properties.push({ name: "[_:string]", type: createType(additionalProperties) });
+        if (additionalProperties !== false) {
+            additionalPropertiesType = createType(additionalProperties);
+        }
+    } else if (schemaProperties !== undefined) {
+        additionalPropertiesType = { ref: "any" }
     }
-    return { interface: properties };
+
+    if (additionalPropertiesType === undefined) {
+        const patternProperties = schemaObject.patternProperties
+        if (patternProperties !== undefined) {
+            additionalPropertiesType = createType(patternProperties);
+        }
+    }
+
+    if (additionalPropertiesType !== undefined) {
+        properties.push({ name: "[_:string]", type: additionalPropertiesType })
+    }
+
+    return { interface: properties }
 }
 
 function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
@@ -253,7 +271,9 @@ function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
             { 
                 name: name, 
                 type: { 
-                    union: types.filter((_, i) => i > 0).concat({ ref: typeName(objectName) })
+                    union: types
+                        .filter((_, i) => i > 0)
+                        .concat({ ref: typeName(objectName) })
                 }
             }
         ]
