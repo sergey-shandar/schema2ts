@@ -114,8 +114,8 @@ namespace Ts {
     }
 }
 
-// const name = "swagger20";
-const name = "schema";
+const name = "swagger20";
+// const name = "schema";
 
 const definitionsUri = "#/definitions/";
 
@@ -237,29 +237,30 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
         : []
     
     const additionalProperties = schemaObject.additionalProperties;
-    let additionalPropertiesType : Ts.Type|undefined = undefined;
-    if (additionalProperties !== undefined) {
-        if (additionalProperties !== false) {
-            additionalPropertiesType = createType(additionalProperties);
-        }
-    } else {
-        additionalPropertiesType = { ref: "any" }
+    const additionalPropertiesTypes : Ts.Type[] = [];
+    switch (additionalProperties) {
+        case true:
+        case undefined:
+            additionalPropertiesTypes.push({ ref: "any" })
+            break;
+        case false:
+            break;
+        default:
+            additionalPropertiesTypes.push(createType(additionalProperties))
+            break;
     }
 
-    if (additionalPropertiesType === undefined) {
-        const patternProperties = schemaObject.patternProperties
-        if (patternProperties !== undefined) {
-            const types = Object
-                .keys(patternProperties)
-                .map(k => createType(patternProperties[k]))
-                .concat(properties.map(p => p.type))
-                .concat([{ ref: "undefined" }])
-            additionalPropertiesType = { union: types }
-        }
+    const patternProperties = schemaObject.patternProperties
+    if (patternProperties !== undefined) {
+        const types = Object
+            .keys(patternProperties)
+            .forEach(k => additionalPropertiesTypes.push(createType(patternProperties[k])))
     }
 
-    if (additionalPropertiesType !== undefined) {
-        properties.push({ name: "[_:string]", type: additionalPropertiesType })
+    if (additionalPropertiesTypes.length > 0) {
+        properties.forEach(p => additionalPropertiesTypes.push(p.type))
+        additionalPropertiesTypes.push({ ref: "undefined" })
+        properties.push({ name: "[_:string]", type: { union: additionalPropertiesTypes }})
     }
 
     return { interface: properties }
