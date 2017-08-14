@@ -216,9 +216,9 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const $ref = schemaObject.$ref
         if ($ref !== undefined) {
-            if ($ref === "#") return [{ ref: typeName(name) }]
+            if ($ref === "#") return [refType(name)]
             if ($ref.startsWith(definitionsUri)) {
-                return [{ ref: typeName($ref.substr(definitionsUri.length)) }]
+                return [refType($ref.substr(definitionsUri.length))]
             }
             return [anyType]
         }
@@ -269,6 +269,10 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
 
 function typeName(name: string): string {
     return name[0].toUpperCase() + name.substr(1)
+}
+
+function refType(name: string): Ts.Type {
+    return { ref: typeName(name) };
 }
 
 function propertyName(name: string): string {
@@ -363,7 +367,7 @@ function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAli
                 name: name,
                 type: Ts.union(types
                     .filter((_, i) => i > 0)
-                    .concat({ ref: typeName(objectName) }))
+                    .concat(refType(objectName)))
             }
         ]
     }
