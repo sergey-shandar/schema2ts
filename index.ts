@@ -1,86 +1,89 @@
-import * as fs from "fs";
-import * as os from "os";
-import X = require("./schema");
+import * as fs from "fs"
+import * as os from "os"
+import X = require("./schema")
 
 function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
-    let previous: string|undefined = undefined;
+    let previous: string|undefined = undefined
     for (const v of i) {
         if (previous !== undefined) {
-            yield previous;
-            previous = v;
+            yield previous
+            previous = v
         } else {
-            previous = prefix + v;
+            previous = prefix + v
         }
     }
     if (previous !== undefined) {
-        yield previous + suffix;
+        yield previous + suffix
     } else {
-        yield prefix + suffix;
+        yield prefix + suffix
     }
 }
 
 function* indent(i: IterableIterator<string>) {
     for (const v of i) {
-        yield "    " + v;
+        yield "    " + v
     }
 }
 
 function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
-    let previous : string|undefined = undefined;
+    let previous : string|undefined = undefined
     for (const i of ii) {
         if (previous !== undefined) {
-            previous += separator;
+            previous += separator
         }
-        let first = true;
+        let first = true
         for (const v of i) {
             if (first) {
-                previous = previous === undefined ? v : previous + v;
-                first = false;
+                previous = previous === undefined ? v : previous + v
+                first = false
             } else {
                 if (previous !== undefined) {
-                    yield previous;
+                    yield previous
                 }
-                previous = v;
+                previous = v
             }
         }
     }
     if (previous !== undefined) {
-        yield previous;
+        yield previous
     }
 }
 
 function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
     for (const i of ii) {
-        yield* i;
+        yield* i
     }
 }
 
 namespace Ts {
     export interface Property {
-        readonly name: string;
-        readonly type: Type;
+        readonly name: string
+        readonly type: Type
     }
-    export type Interface = Property[];
+    export type Interface = Property[]
     export interface Type {
-        readonly ref?: string;
-        readonly interface?: Interface;
-        readonly union?: Type[];
-        readonly array?: Type;
-        readonly tuple?: Type[];
-        readonly const?: string;
+        readonly ref?: string
+        readonly interface?: Interface
+        readonly union?: Type[]
+        readonly array?: Type
+        readonly tuple?: Type[]
+        readonly const?: string
     }
     export interface TypeAlias {
-        readonly name: string;
-        readonly type: Type;
+        readonly name: string
+        readonly type: Type
     }
-    export type Module = Iterable<TypeAlias>;
+    export type Module = Iterable<TypeAlias>
 
     export function union(types: Type[]) {
-        const newTypes : Type[] = [];
+        const newTypes : Type[] = []
         for (const i of types) {
+            if (i === anyType) {
+                return anyType
+            }
             if (i.union !== undefined) {
                 for (const j of i.union) {
-                    pushUnique(newTypes, j);
+                    pushUnique(newTypes, j)
                 }
             } else {
                 pushUnique(newTypes, i)
@@ -88,7 +91,7 @@ namespace Ts {
         }
         if (newTypes.length === 1) {
             return newTypes[0]
-        }        
+        }
         return { union: newTypes }
     }
 
@@ -99,92 +102,92 @@ namespace Ts {
 
     export function arrayEqual<T>(
         a: T[]|undefined, b: T[]|undefined, e: (ai: T, bi: T) => boolean): boolean {
-        
+
         if (a === b) {
-            return true;
+            return true
         }
         if (a === undefined || b === undefined) {
-            return false;
+            return false
         }
-        const al = a.length;
-        const bl = b.length;
+        const al = a.length
+        const bl = b.length
         if (al !== bl) {
-            return false;
+            return false
         }
         for (let i = 0; i < al; ++i) {
             if (!e(a[i], b[i])) {
-                return false;
+                return false
             }
         }
-        return true;        
+        return true
     }
 
     export function interfaceEqual(a: Interface|undefined, b: Interface|undefined) {
-        return arrayEqual(a, b, propertyEqual);
+        return arrayEqual(a, b, propertyEqual)
     }
 
     export function typeArrayEqual(a: Type[]|undefined, b: Type[]|undefined) {
-        return arrayEqual(a, b, typeEqual);
+        return arrayEqual(a, b, typeEqual)
     }
 
     export function typeEqual(a: Type|undefined, b: Type|undefined): boolean {
         if (a === b) {
-            return true;
+            return true
         }
         if (a === undefined || b === undefined) {
-            return false;
+            return false
         }
         return a.ref === b.ref
             && interfaceEqual(a.interface, b.interface)
             && typeArrayEqual(a.union, b.union)
             && typeEqual(a.array, b.array)
             && typeArrayEqual(a.tuple, b.tuple)
-            && a.const === b.const;
+            && a.const === b.const
     }
 
     export function* type(t: Type): IterableIterator<string> {
-        if (t.ref !== undefined) {            
-            yield t.ref;
+        if (t.ref !== undefined) {
+            yield t.ref
         } else if (t.interface !== undefined) {
             if (t.interface.length == 0) {
-                yield "{}";
+                yield "{}"
             } else {
                 yield "{"
                 for (const p of t.interface) {
-                    yield *indent(wrap(type(p.type), "readonly " + p.name + ": ", ";"));
+                    yield *indent(wrap(type(p.type), "readonly " + p.name + ": ", ""))
                 }
-                yield "}";
+                yield "}"
             }
         } else if (t.union !== undefined) {
-            yield *join(t.union.map(type), "|"), "(", ")";
+            yield *join(t.union.map(type), "|"), "(", ")"
         } else if (t.array !== undefined) {
-            const item = type(t.array); 
+            const item = type(t.array)
             if (t.array.union !== undefined) {
-                yield *wrap(item, "(", ")[]");
+                yield *wrap(item, "(", ")[]")
             } else {
-                yield *wrap(item, "", "[]");
-            }            
+                yield *wrap(item, "", "[]")
+            }
         } else if (t.tuple !== undefined) {
-            yield *wrap(join(t.tuple.map(type), ","), "[", "]");
+            yield *wrap(join(t.tuple.map(type), ","), "[", "]")
         } else if (t.const !== undefined) {
-            yield '"' + t.const + '"';
+            yield '"' + t.const + '"'
         }
     }
 
     export function* typeAlias(t: TypeAlias) {
-        yield* wrap(type(t.type), "export type " + typeName(t.name) + " = ", ";");
+        yield* wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
     export function* module(m: Module) {
         for (const i of m) {
-            yield* typeAlias(i);
+            yield* typeAlias(i)
         }
     }
 }
 
-// const name = "swagger20";
-const name = "schema";
+// const name = "swagger20"
+const name = "schema"
 
-const definitionsUri = "#/definitions/";
+const definitionsUri = "#/definitions/"
 
 function onlyOne<T>(a: T|undefined, b: T|undefined) {
     return a !== undefined ? a : b
@@ -199,41 +202,41 @@ function allOfSchema(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
 
 function createType(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
-        return { ref: "any" }
+        return anyType
     }
     return Ts.union(createType0(schema))
 }
 
 function createType0(schemaObject: X.Schema): Ts.Type[] {
     if (typeof schemaObject === "boolean") {
-        return [{ ref: schemaObject ? "any" : "never" }];
+        return [schemaObject ? anyType : neverType ]
     }
 
     // $ref
     {
-        const $ref = schemaObject.$ref;
+        const $ref = schemaObject.$ref
         if ($ref !== undefined) {
-            if ($ref === "#") return [{ ref: typeName(name) }];
+            if ($ref === "#") return [{ ref: typeName(name) }]
             if ($ref.startsWith(definitionsUri)) {
-                return [{ ref: typeName($ref.substr(definitionsUri.length)) }];
+                return [{ ref: typeName($ref.substr(definitionsUri.length)) }]
             }
-            return [{ ref: "any" }];
+            return [anyType]
         }
-    }    
+    }
 
     // enum
     {
-        const enum_ = schemaObject.enum;
+        const enum_ = schemaObject.enum
         if (enum_ !== undefined) {
-            return [Ts.union(enum_.map(v => ({ const: v })))];
+            return [Ts.union(enum_.map(v => ({ const: v })))]
         }
     }
 
     // anyOf
     {
-        const anyOf = schemaObject.anyOf;
+        const anyOf = schemaObject.anyOf
         if (anyOf !== undefined) {
-            return [Ts.union(anyOf.map(createType))];
+            return [Ts.union(anyOf.map(createType))]
         }
     }
 
@@ -249,75 +252,83 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const items = schemaObject.items
         if (items !== undefined) {
-            return [ Array.isArray(items) 
+            return [ Array.isArray(items)
                 ? { tuple: items.map(createType) }
                 : { array: createType(items) }
             ]
         }
     }
 
-    const type = schemaObject.type;
+    const type = schemaObject.type
     if (Array.isArray(type)) {
-        return type.map(t => createType2(t, schemaObject));
+        return type.map(t => createType2(t, schemaObject))
     } else {
         return [createType2(type, schemaObject)]
     }
 }
 
 function typeName(name: string): string {
-    return name[0].toUpperCase() + name.substr(1);
+    return name[0].toUpperCase() + name.substr(1)
 }
 
 function propertyName(name: string): string {
-    return name;
+    return name
 }
 
 function pushUnique(a: Ts.Type[], v: Ts.Type) {
     if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
-        a.push(v);
+        a.push(v)
     }
 }
 
-function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {    
+const anyType : Ts.Type = { ref: "any" }
+const neverType : Ts.Type = { ref: "never" }
+const anyArrayType : Ts.Type = { array: anyType }
+const stringType : Ts.Type = { ref: "string"}
+const numberType : Ts.Type = { ref: "number" }
+const booleanType : Ts.Type = { ref: "boolean" }
+const undefinedType : Ts.Type = { ref: "undefined" }
+
+function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {
     // simple types
     switch (type) {
         case "array":
-            return { ref: "any[]" }
+            return anyArrayType
         case "string":
-            return { ref: "string" }
+            return stringType
         case "integer":
         case "number":
-            return { ref: "number" }
+            return numberType
         case "boolean":
-            return { ref: "boolean" }
+            return booleanType
     }
 
     // object
-    const required = schemaObject.required === undefined ? [] : schemaObject.required;
-    const schemaProperties = schemaObject.properties;
-    
-    let properties: Ts.Property[] = schemaProperties !== undefined 
+    const required = schemaObject.required === undefined ? [] : schemaObject.required
+    const schemaProperties = schemaObject.properties
+
+    let properties: Ts.Property[] = schemaProperties !== undefined
         ? Object
             .keys(schemaProperties)
-            .map(name => ({ 
-                name: propertyName(name) 
-                    + (required.find(r => r === name) === undefined ? "?" : ""), 
-                type: createType(schemaProperties[name]) 
+            .map(name => ({
+                name: propertyName(name)
+                    + (required.find(r => r === name) === undefined ? "?" : ""),
+                type: createType(schemaProperties[name])
             }))
         : []
-    
-    const additionalProperties = schemaObject.additionalProperties;
-    const additionalPropertiesTypes : Ts.Type[] = [];
+
+    const additionalProperties = schemaObject.additionalProperties
+    const additionalPropertiesTypes : Ts.Type[] = []
     switch (additionalProperties) {
         case true:
         case undefined:
-            pushUnique(additionalPropertiesTypes, { ref: "any" })
-            break;
+            pushUnique(additionalPropertiesTypes, anyType)
+            break
         case false:
-            break;
+            break
         default:
             pushUnique(additionalPropertiesTypes, createType(additionalProperties))
-            break;
+            break
     }
 
     const patternProperties = schemaObject.patternProperties
@@ -330,7 +341,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
 
     if (additionalPropertiesTypes.length > 0) {
         properties.forEach(p => pushUnique(additionalPropertiesTypes, p.type))
-        pushUnique(additionalPropertiesTypes, { ref: "undefined" })
+        pushUnique(additionalPropertiesTypes, undefinedType)
         properties.push({ name: "[_:string]", type: Ts.union(additionalPropertiesTypes)})
     }
 
@@ -339,17 +350,17 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
 
 function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAlias[] {
     if (schema === undefined) {
-        return [];
+        return []
     }
-    const types = createType0(schema);
+    const types = createType0(schema)
     if (types.length === 1) {
         return [{ name: name, type: types[0]}]
     } else {
-        const objectName = name + "Object";
+        const objectName = name + "Object"
         return [
             { name: objectName, type: types[0] },
-            { 
-                name: name,                 
+            {
+                name: name,
                 type: Ts.union(types
                     .filter((_, i) => i > 0)
                     .concat({ ref: typeName(objectName) }))
@@ -358,20 +369,20 @@ function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAli
     }
 }
 
-const schema : X.SchemaObject = JSON.parse(fs.readFileSync(name + ".json").toString());
+const schema : X.SchemaObject = JSON.parse(fs.readFileSync(name + ".json").toString())
 
-const schemaDefinitions = schema.definitions;
+const schemaDefinitions = schema.definitions
 
 const definitions = schemaDefinitions !== undefined
     ? Object
         .keys(schemaDefinitions)
         .map(name => createTypeAliases(name, schemaDefinitions[name]))
-    : [];
+    : []
 
-const result = definitions.concat([createTypeAliases(name, schema)]);
+const result = definitions.concat([createTypeAliases(name, schema)])
 
-let text = "";
+let text = ""
 for (const line of Ts.module(flatten(result))) {
-    text += line + os.EOL;
+    text += line + os.EOL
 }
-fs.writeFileSync(name + ".d.ts", text);
+fs.writeFileSync(name + ".d.ts", text)
