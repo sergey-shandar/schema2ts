@@ -192,7 +192,8 @@ namespace Ts {
 }
 
 // const name = "swagger20"
-const name = "schema"
+// const name = "schema"
+const name = "swagger-autorest"
 
 const definitionsUri = "#/definitions/"
 
@@ -275,7 +276,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
 }
 
 function typeName(name: string): string {
-    return name[0].toUpperCase() + name.substr(1)
+    return (name[0].toUpperCase() + name.substr(1)).replace(/-/ig, "_")
 }
 
 function refType(name: string): Ts.Type {
@@ -283,7 +284,7 @@ function refType(name: string): Ts.Type {
 }
 
 function propertyName(name: string): string {
-    return name
+    return name.replace(/-/ig, "_")
 }
 
 function pushUnique(a: Ts.Type[], v: Ts.Type) {
