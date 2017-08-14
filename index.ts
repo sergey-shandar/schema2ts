@@ -184,8 +184,8 @@ namespace Ts {
     }
 }
 
-// const name = "swagger20"
-const name = "schema"
+const name = "swagger20"
+// const name = "schema"
 
 const definitionsUri = "#/definitions/"
 
