@@ -76,11 +76,10 @@ namespace Ts {
     export type Module = Iterable<TypeAlias>
 
     export function union(types: Type[]) {
-        const newTypes : Type[] = []
+        let newTypes : Type[] = []
+
+        // union flattering.
         for (const i of types) {
-            if (i === anyType) {
-                return anyType
-            }
             if (i.union !== undefined) {
                 for (const j of i.union) {
                     pushUnique(newTypes, j)
@@ -89,10 +88,18 @@ namespace Ts {
                 pushUnique(newTypes, i)
             }
         }
-        if (newTypes.length === 1) {
-            return newTypes[0]
+
+        if(newTypes.find(i => i === anyType) !== undefined) {
+            return anyType
         }
-        return { union: newTypes }
+
+        if (newTypes.find(i => i === stringType) !== undefined) {
+            newTypes = newTypes.filter(i => i.const === undefined)
+        }
+
+        return newTypes.length === 1
+            ? newTypes[0]
+            : { union: newTypes }
     }
 
     export function propertyEqual(a: Property, b: Property): boolean {
@@ -184,8 +191,8 @@ namespace Ts {
     }
 }
 
-const name = "swagger20"
-// const name = "schema"
+// const name = "swagger20"
+const name = "schema"
 
 const definitionsUri = "#/definitions/"
 

@@ -105,7 +105,7 @@ export type Header = {
     readonly enum?: Enum
     readonly multipleOf?: MultipleOf
     readonly description?: string
-    readonly [_:string]: VendorExtension|"string"|"number"|"integer"|"boolean"|"array"|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
+    readonly [_:string]: VendorExtension|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
 export type VendorExtension = {
     readonly [_:string]: any
@@ -116,7 +116,7 @@ export type BodyParameter = {
     readonly in: "body"
     readonly required?: boolean
     readonly schema: Schema
-    readonly [_:string]: VendorExtension|string|"body"|boolean|Schema|undefined
+    readonly [_:string]: VendorExtension|string|boolean|Schema|undefined
 }
 export type HeaderParameterSubSchema = {
     readonly required?: boolean
@@ -140,7 +140,7 @@ export type HeaderParameterSubSchema = {
     readonly uniqueItems?: UniqueItems
     readonly enum?: Enum
     readonly multipleOf?: MultipleOf
-    readonly [_:string]: VendorExtension|boolean|"header"|string|"string"|"number"|"boolean"|"integer"|"array"|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
+    readonly [_:string]: VendorExtension|boolean|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
 export type QueryParameterSubSchema = {
     readonly required?: boolean
@@ -165,7 +165,7 @@ export type QueryParameterSubSchema = {
     readonly uniqueItems?: UniqueItems
     readonly enum?: Enum
     readonly multipleOf?: MultipleOf
-    readonly [_:string]: VendorExtension|boolean|"query"|string|"string"|"number"|"boolean"|"integer"|"array"|PrimitivesItems|CollectionFormatWithMulti|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
+    readonly [_:string]: VendorExtension|boolean|string|PrimitivesItems|CollectionFormatWithMulti|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
 export type FormDataParameterSubSchema = {
     readonly required?: boolean
@@ -190,7 +190,7 @@ export type FormDataParameterSubSchema = {
     readonly uniqueItems?: UniqueItems
     readonly enum?: Enum
     readonly multipleOf?: MultipleOf
-    readonly [_:string]: VendorExtension|boolean|"formData"|string|"string"|"number"|"boolean"|"integer"|"array"|"file"|PrimitivesItems|CollectionFormatWithMulti|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
+    readonly [_:string]: VendorExtension|boolean|string|PrimitivesItems|CollectionFormatWithMulti|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
 export type PathParameterSubSchema = {
     readonly required: "true"
@@ -214,7 +214,7 @@ export type PathParameterSubSchema = {
     readonly uniqueItems?: UniqueItems
     readonly enum?: Enum
     readonly multipleOf?: MultipleOf
-    readonly [_:string]: VendorExtension|"true"|"path"|string|"string"|"number"|"boolean"|"integer"|"array"|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
+    readonly [_:string]: VendorExtension|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
 export type NonBodyParameter = {
     readonly [_:string]: any
@@ -291,7 +291,7 @@ export type PrimitivesItems = {
     readonly uniqueItems?: UniqueItems
     readonly enum?: Enum
     readonly multipleOf?: MultipleOf
-    readonly [_:string]: VendorExtension|"string"|"number"|"integer"|"boolean"|"array"|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
+    readonly [_:string]: VendorExtension|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
 export type Security = SecurityRequirement[]
 export type SecurityRequirement = {
@@ -319,14 +319,14 @@ export type SecurityDefinitions = {
 export type BasicAuthenticationSecurity = {
     readonly type: "basic"
     readonly description?: string
-    readonly [_:string]: VendorExtension|"basic"|string|undefined
+    readonly [_:string]: VendorExtension|string|undefined
 }
 export type ApiKeySecurity = {
     readonly type: "apiKey"
     readonly name: string
     readonly in: "header"|"query"
     readonly description?: string
-    readonly [_:string]: VendorExtension|"apiKey"|string|"header"|"query"|undefined
+    readonly [_:string]: VendorExtension|string|undefined
 }
 export type Oauth2ImplicitSecurity = {
     readonly type: "oauth2"
@@ -334,7 +334,7 @@ export type Oauth2ImplicitSecurity = {
     readonly scopes?: Oauth2Scopes
     readonly authorizationUrl: string
     readonly description?: string
-    readonly [_:string]: VendorExtension|"oauth2"|"implicit"|Oauth2Scopes|string|undefined
+    readonly [_:string]: VendorExtension|Oauth2Scopes|string|undefined
 }
 export type Oauth2PasswordSecurity = {
     readonly type: "oauth2"
@@ -342,7 +342,7 @@ export type Oauth2PasswordSecurity = {
     readonly scopes?: Oauth2Scopes
     readonly tokenUrl: string
     readonly description?: string
-    readonly [_:string]: VendorExtension|"oauth2"|"password"|Oauth2Scopes|string|undefined
+    readonly [_:string]: VendorExtension|Oauth2Scopes|string|undefined
 }
 export type Oauth2ApplicationSecurity = {
     readonly type: "oauth2"
@@ -350,7 +350,7 @@ export type Oauth2ApplicationSecurity = {
     readonly scopes?: Oauth2Scopes
     readonly tokenUrl: string
     readonly description?: string
-    readonly [_:string]: VendorExtension|"oauth2"|"application"|Oauth2Scopes|string|undefined
+    readonly [_:string]: VendorExtension|Oauth2Scopes|string|undefined
 }
 export type Oauth2AccessCodeSecurity = {
     readonly type: "oauth2"
@@ -359,7 +359,7 @@ export type Oauth2AccessCodeSecurity = {
     readonly authorizationUrl: string
     readonly tokenUrl: string
     readonly description?: string
-    readonly [_:string]: VendorExtension|"oauth2"|"accessCode"|Oauth2Scopes|string|undefined
+    readonly [_:string]: VendorExtension|Oauth2Scopes|string|undefined
 }
 export type Oauth2Scopes = {
     readonly [_:string]: string|undefined
@@ -405,5 +405,5 @@ export type Swagger20 = {
     readonly securityDefinitions?: SecurityDefinitions
     readonly tags?: Tag[]
     readonly externalDocs?: ExternalDocs
-    readonly [_:string]: VendorExtension|"2.0"|Info|string|SchemesList|MediaTypeList|Paths|Definitions|ParameterDefinitions|ResponseDefinitions|Security|SecurityDefinitions|Tag[]|ExternalDocs|undefined
+    readonly [_:string]: VendorExtension|Info|string|SchemesList|MediaTypeList|Paths|Definitions|ParameterDefinitions|ResponseDefinitions|Security|SecurityDefinitions|Tag[]|ExternalDocs|undefined
 }
