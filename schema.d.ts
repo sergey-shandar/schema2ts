@@ -10,7 +10,7 @@ export type SchemaObject = {
     readonly title?: string;
     readonly description?: string;
     readonly default?: {
-        readonly [_:string]: any;
+        readonly [_:string]: any|undefined;
     };
     readonly multipleOf?: number;
     readonly maximum?: number;
@@ -31,20 +31,20 @@ export type SchemaObject = {
     readonly required?: StringArray;
     readonly additionalProperties?: Schema;
     readonly definitions?: {
-        readonly [_:string]: Schema;
+        readonly [_:string]: Schema|undefined;
     };
     readonly properties?: {
-        readonly [_:string]: Schema;
+        readonly [_:string]: Schema|undefined;
     };
     readonly patternProperties?: {
-        readonly [_:string]: Schema;
+        readonly [_:string]: Schema|undefined;
     };
     readonly dependencies?: {
-        readonly [_:string]: Schema|StringArray;
+        readonly [_:string]: Schema|StringArray|undefined;
     };
     readonly propertyNames?: Schema;
     readonly const?: {
-        readonly [_:string]: any;
+        readonly [_:string]: any|undefined;
     };
     readonly enum?: any[];
     readonly type?: SimpleTypes|SimpleTypes[];
@@ -53,6 +53,12 @@ export type SchemaObject = {
     readonly anyOf?: SchemaArray;
     readonly oneOf?: SchemaArray;
     readonly not?: Schema;
-    readonly [_:string]: any;
+    readonly [_:string]: any|string|{
+        readonly [_:string]: any|undefined;
+    }|number|NonNegativeInteger|NonNegativeIntegerDefault0|Schema|SchemaArray|boolean|StringArray|{
+        readonly [_:string]: Schema|undefined;
+    }|{
+        readonly [_:string]: Schema|StringArray|undefined;
+    }|any[]|SimpleTypes|SimpleTypes[]|undefined;
 };
 export type Schema = boolean|SchemaObject;

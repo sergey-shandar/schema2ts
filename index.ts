@@ -75,6 +75,73 @@ namespace Ts {
     }
     export type Module = Iterable<TypeAlias>;
 
+    export function union(types: Type[]) {
+        const newTypes : Type[] = [];
+        for (const i of types) {
+            if (i.union !== undefined) {
+                for (const j of i.union) {
+                    pushUnique(newTypes, j);
+                }
+            } else {
+                pushUnique(newTypes, i)
+            }
+        }
+        if (newTypes.length === 1) {
+            return newTypes[0]
+        }        
+        return { union: newTypes }
+    }
+
+    export function propertyEqual(a: Property, b: Property): boolean {
+        return a.name === b.name
+            && typeEqual(a.type, b.type)
+    }
+
+    export function arrayEqual<T>(
+        a: T[]|undefined, b: T[]|undefined, e: (ai: T, bi: T) => boolean): boolean {
+        
+        if (a === b) {
+            return true;
+        }
+        if (a === undefined || b === undefined) {
+            return false;
+        }
+        const al = a.length;
+        const bl = b.length;
+        if (al !== bl) {
+            return false;
+        }
+        for (let i = 0; i < al; ++i) {
+            if (!e(a[i], b[i])) {
+                return false;
+            }
+        }
+        return true;        
+    }
+
+    export function interfaceEqual(a: Interface|undefined, b: Interface|undefined) {
+        return arrayEqual(a, b, propertyEqual);
+    }
+
+    export function typeArrayEqual(a: Type[]|undefined, b: Type[]|undefined) {
+        return arrayEqual(a, b, typeEqual);
+    }
+
+    export function typeEqual(a: Type|undefined, b: Type|undefined): boolean {
+        if (a === b) {
+            return true;
+        }
+        if (a === undefined || b === undefined) {
+            return false;
+        }
+        return a.ref === b.ref
+            && interfaceEqual(a.interface, b.interface)
+            && typeArrayEqual(a.union, b.union)
+            && typeEqual(a.array, b.array)
+            && typeArrayEqual(a.tuple, b.tuple)
+            && a.const === b.const;
+    }
+
     export function* type(t: Type): IterableIterator<string> {
         if (t.ref !== undefined) {            
             yield t.ref;
@@ -114,8 +181,8 @@ namespace Ts {
     }
 }
 
-const name = "swagger20";
-// const name = "schema";
+// const name = "swagger20";
+const name = "schema";
 
 const definitionsUri = "#/definitions/";
 
@@ -134,10 +201,7 @@ function createType(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
         return { ref: "any" }
     }
-    const types = createType0(schema)
-    return types.length === 1
-        ? types[0]
-        : { union: types }
+    return Ts.union(createType0(schema))
 }
 
 function createType0(schemaObject: X.Schema): Ts.Type[] {
@@ -161,7 +225,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const enum_ = schemaObject.enum;
         if (enum_ !== undefined) {
-            return [{ union: enum_.map(v => ({ const: v })) }];
+            return [Ts.union(enum_.map(v => ({ const: v })))];
         }
     }
 
@@ -169,7 +233,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const anyOf = schemaObject.anyOf;
         if (anyOf !== undefined) {
-            return [{ union: anyOf.map(createType) }];
+            return [Ts.union(anyOf.map(createType))];
         }
     }
 
@@ -208,6 +272,12 @@ function propertyName(name: string): string {
     return name;
 }
 
+function pushUnique(a: Ts.Type[], v: Ts.Type) {
+    if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
+        a.push(v);
+    }
+}
+
 function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {    
     // simple types
     switch (type) {
@@ -241,12 +311,12 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     switch (additionalProperties) {
         case true:
         case undefined:
-            additionalPropertiesTypes.push({ ref: "any" })
+            pushUnique(additionalPropertiesTypes, { ref: "any" })
             break;
         case false:
             break;
         default:
-            additionalPropertiesTypes.push(createType(additionalProperties))
+            pushUnique(additionalPropertiesTypes, createType(additionalProperties))
             break;
     }
 
@@ -254,19 +324,23 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     if (patternProperties !== undefined) {
         const types = Object
             .keys(patternProperties)
-            .forEach(k => additionalPropertiesTypes.push(createType(patternProperties[k])))
+            .forEach(k => pushUnique(
+                additionalPropertiesTypes, createType(patternProperties[k])))
     }
 
     if (additionalPropertiesTypes.length > 0) {
-        properties.forEach(p => additionalPropertiesTypes.push(p.type))
-        additionalPropertiesTypes.push({ ref: "undefined" })
-        properties.push({ name: "[_:string]", type: { union: additionalPropertiesTypes }})
+        properties.forEach(p => pushUnique(additionalPropertiesTypes, p.type))
+        pushUnique(additionalPropertiesTypes, { ref: "undefined" })
+        properties.push({ name: "[_:string]", type: Ts.union(additionalPropertiesTypes)})
     }
 
     return { interface: properties }
 }
 
-function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
+function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAlias[] {
+    if (schema === undefined) {
+        return [];
+    }
     const types = createType0(schema);
     if (types.length === 1) {
         return [{ name: name, type: types[0]}]
@@ -275,12 +349,10 @@ function createTypeAliases(name: string, schema: X.Schema): Ts.TypeAlias[] {
         return [
             { name: objectName, type: types[0] },
             { 
-                name: name, 
-                type: { 
-                    union: types
-                        .filter((_, i) => i > 0)
-                        .concat({ ref: typeName(objectName) })
-                }
+                name: name,                 
+                type: Ts.union(types
+                    .filter((_, i) => i > 0)
+                    .concat({ ref: typeName(objectName) }))
             }
         ]
     }
