@@ -233,35 +233,44 @@ namespace Ts {
     export const undefinedType : Ts.Type = { ref: "undefined" }
 }
 
+function optionalToArray<T>(v: T|undefined): T[] {
+    return v === undefined ? [] : [v]
+}
+
 function createTypeFromSchema(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
         return Ts.anyType
     }
-    return Ts.union(createTypesFromSchema(schema))
+    const types = createTypesFromSchema(schema)
+    return Ts.union(types.additionalTypes.concat(optionalToArray(types.objectType)))
 }
 
 interface TsTypes {
-    readonly objectType: Ts.Type|undefined
+    readonly objectType?: Ts.Type
     readonly additionalTypes: Ts.Type[]
 }
 
-function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
+function toTypes(types: Ts.Type[]): TsTypes {
+    return { additionalTypes: types }
+}
+
+function createTypesFromSchema(schemaObject: X.Schema): TsTypes {
     switch (schemaObject) {
         case true:
-            return [Ts.anyType]
+            return toTypes([Ts.anyType])
         case false:
-            return [Ts.neverType]
+            return toTypes([Ts.neverType])
     }
 
     // $ref
     {
         const $ref = schemaObject.$ref
         if ($ref !== undefined) {
-            if ($ref === "#") return [Ts.refType(name)]
+            if ($ref === "#") return toTypes([Ts.refType(name)])
             if ($ref.startsWith(Schema.definitionsUri)) {
-                return [Ts.refType($ref.substr(Schema.definitionsUri.length))]
+                return toTypes([Ts.refType($ref.substr(Schema.definitionsUri.length))])
             }
-            return [Ts.anyType]
+            return toTypes([Ts.anyType])
         }
     }
 
@@ -269,7 +278,7 @@ function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
     {
         const enum_ = schemaObject.enum
         if (enum_ !== undefined) {
-            return [Ts.union(enum_.map(v => ({ const: v })))]
+            return toTypes(enum_.map(v => ({ const: v })))
         }
     }
 
@@ -277,7 +286,7 @@ function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
     {
         const oneOf = schemaObject.oneOf
         if (oneOf !== undefined) {
-            return [Ts.union(oneOf.map(createTypeFromSchema))]
+            return toTypes(oneOf.map(createTypeFromSchema))
         }
     }
 
@@ -285,7 +294,7 @@ function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
     {
         const anyOf = schemaObject.anyOf
         if (anyOf !== undefined) {
-            return [Ts.union(anyOf.map(createTypeFromSchema))]
+            return toTypes(anyOf.map(createTypeFromSchema))
         }
     }
 
@@ -293,7 +302,7 @@ function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
     {
         const allOf = schemaObject.allOf
         if (allOf !== undefined) {
-            return [createTypeFromSchema(allOf.reduce(Schema.allOfSchema))]
+            return toTypes([createTypeFromSchema(allOf.reduce(Schema.allOfSchema))])
         }
     }
 
@@ -301,22 +310,32 @@ function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
     {
         const items = schemaObject.items
         if (items !== undefined) {
-            return [ Array.isArray(items)
+            return toTypes([ Array.isArray(items)
                 ? { tuple: items.map(createTypeFromSchema) }
                 : { array: createTypeFromSchema(items) }
-            ]
+            ])
         }
     }
 
     const type = schemaObject.type
     if (Array.isArray(type)) {
-        return type.map(t => createTypeFromSchemaObject(t, schemaObject))
+        return {
+            objectType: type.find(v => v === "object") !== undefined
+                ? createObjectType(schemaObject)
+                : undefined,
+            additionalTypes:
+                type
+                    .filter(v => v !== "object")
+                    .map(t => createSimpleType(t))
+        }
     } else {
-        return [createTypeFromSchemaObject(type, schemaObject)]
+        return type === "object" || type === undefined
+            ? { objectType: createObjectType(schemaObject), additionalTypes: [] }
+            : { additionalTypes: [createSimpleType(type)] }
     }
 }
 
-function createTypeFromSchemaObject(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {
+function createSimpleType(type: string|undefined) {
     // simple types
     switch (type) {
         case "array":
@@ -328,8 +347,12 @@ function createTypeFromSchemaObject(type: string|undefined, schemaObject: X.Sche
             return Ts.numberType
         case "boolean":
             return Ts.booleanType
+        default:
+            return Ts.neverType;
     }
+}
 
+function createObjectType(schemaObject: X.SchemaObject): Ts.Type {
     // object
     const required = schemaObject.required === undefined ? [] : schemaObject.required
     const schemaProperties = schemaObject.properties
@@ -380,20 +403,20 @@ function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAli
         return []
     }
     const types = createTypesFromSchema(schema)
-    if (types.length === 1) {
-        return [{ name: name, type: types[0]}]
-    } else {
-        const objectName = name + "Object"
+    if (types.objectType !== undefined) {
+        if (types.additionalTypes.length === 0) {
+            return [{ name: name, type: types.objectType }]
+        }
+        const objectType = name + "Object"
         return [
-            { name: objectName, type: types[0] },
+            { name: objectType, type: types.objectType },
             {
                 name: name,
-                type: Ts.union(types
-                    .filter((_, i) => i > 0)
-                    .concat(Ts.refType(objectName)))
+                type: Ts.union(types.additionalTypes.concat([Ts.refType(objectType)]))
             }
         ]
     }
+    return [{ name: name, type: Ts.union(types.additionalTypes) }]
 }
 
 const name = process.argv[2]
