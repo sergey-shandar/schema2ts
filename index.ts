@@ -114,7 +114,7 @@ namespace Ts {
             }
         }
 
-        if(newTypes.find(i => i === anyType) !== undefined) {
+        if (newTypes.find(i => i === anyType) !== undefined) {
             return anyType
         }
 
@@ -335,7 +335,7 @@ function createTypesFromSchema(main: Main, schemaObject: X.Schema): TsTypes {
     } else {
         return type === "object" || type === undefined
             ? { objectType: createObjectType(main, schemaObject), additionalTypes: [] }
-            : { additionalTypes: [createSimpleType(type)] }
+            : toTypes([createSimpleType(type)])
     }
 }
 
@@ -371,8 +371,8 @@ function createObjectType(main: Main, schemaObject: X.SchemaObject): Ts.Type {
             }))
         : []
 
-    const additionalProperties = schemaObject.additionalProperties
     const additionalPropertiesTypes : Ts.Type[] = []
+    const additionalProperties = schemaObject.additionalProperties
     switch (additionalProperties) {
         case true:
         case undefined:
