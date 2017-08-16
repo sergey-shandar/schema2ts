@@ -237,6 +237,27 @@ namespace Ts {
     export const undefinedType : Ts.Type = { ref: "undefined" }
 }
 
+namespace Php {
+    type Type = {
+        readonly name: string
+    }
+    type Expression = {
+    }
+    type Statement = {
+        readonly return: Expression
+    }
+    type Function = {
+        readonly name: string
+        readonly return: Type
+        readonly body: Statement[]
+    }
+    type Class = {
+        readonly name: string
+        readonly extends: string
+        readonly functions: Function[]
+    }
+}
+
 function createTypeFromSchema(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
         return Ts.anyType
@@ -335,7 +356,7 @@ function createTypesFromSchema(schemaObject: X.Schema): TsTypes {
     }
 }
 
-function createSimpleType(type: string|undefined) {
+function createSimpleType(type: string) {
     // simple types
     switch (type) {
         case "array":
