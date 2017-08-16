@@ -56,6 +56,8 @@ function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
 }
 
 namespace Schema {
+    export const definitionsUri = "#/definitions/"
+
     export function onlyOne<T>(a: T|undefined, b: T|undefined) {
         return a !== undefined ? a : b
     }
@@ -87,6 +89,12 @@ namespace Ts {
         readonly type: Type
     }
     export type Module = Iterable<TypeAlias>
+
+    function pushUnique(a: Ts.Type[], v: Ts.Type) {
+        if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
+            a.push(v)
+        }
+    }
 
     export function union(types: Type[]) {
         let newTypes : Type[] = []
@@ -225,11 +233,9 @@ namespace Ts {
     export const undefinedType : Ts.Type = { ref: "undefined" }
 }
 
-// const name = "swagger20"
-const name = "schema"
+const name = "swagger20"
+// const name = "schema"
 // const name = "swagger-autorest"
-
-const definitionsUri = "#/definitions/"
 
 function createType(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
@@ -241,9 +247,9 @@ function createType(schema: X.Schema|undefined): Ts.Type {
 function createType0(schemaObject: X.Schema): Ts.Type[] {
     switch (schemaObject) {
         case true:
-            return [Ts.anyType];
+            return [Ts.anyType]
         case false:
-            return [Ts.neverType];
+            return [Ts.neverType]
     }
 
     // $ref
@@ -251,8 +257,8 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
         const $ref = schemaObject.$ref
         if ($ref !== undefined) {
             if ($ref === "#") return [Ts.refType(name)]
-            if ($ref.startsWith(definitionsUri)) {
-                return [Ts.refType($ref.substr(definitionsUri.length))]
+            if ($ref.startsWith(Schema.definitionsUri)) {
+                return [Ts.refType($ref.substr(Schema.definitionsUri.length))]
             }
             return [Ts.anyType]
         }
@@ -309,12 +315,6 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     }
 }
 
-function pushUnique(a: Ts.Type[], v: Ts.Type) {
-    if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
-        a.push(v)
-    }
-}
-
 function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {
     // simple types
     switch (type) {
@@ -348,12 +348,12 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     switch (additionalProperties) {
         case true:
         case undefined:
-            pushUnique(additionalPropertiesTypes, Ts.anyType)
+            additionalPropertiesTypes.push(Ts.anyType)
             break
         case false:
             break
         default:
-            pushUnique(additionalPropertiesTypes, createType(additionalProperties))
+            additionalPropertiesTypes.push(createType(additionalProperties))
             break
     }
 
@@ -361,13 +361,13 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     if (patternProperties !== undefined) {
         const types = Object
             .keys(patternProperties)
-            .forEach(k => pushUnique(
-                additionalPropertiesTypes, createType(patternProperties[k])))
+            .forEach(k =>
+                additionalPropertiesTypes.push(createType(patternProperties[k])))
     }
 
     if (additionalPropertiesTypes.length > 0) {
-        properties.forEach(p => pushUnique(additionalPropertiesTypes, p.type))
-        pushUnique(additionalPropertiesTypes, Ts.undefinedType)
+        properties.forEach(p => additionalPropertiesTypes.push(p.type))
+        additionalPropertiesTypes.push(Ts.undefinedType)
         properties.push({ name: "[_:string]", type: Ts.union(additionalPropertiesTypes)})
     }
 
