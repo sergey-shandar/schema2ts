@@ -69,19 +69,13 @@ export type PathItem = {
 export type Responses = {
     readonly [_:string]: ResponseValue|VendorExtension|undefined
 }
-export type ResponseValue = {
-    readonly [_:string]: any
-}
+export type ResponseValue = Response|JsonReference
 export type Response = {
     readonly description: string
-    readonly schema?: {
-        readonly [_:string]: any
-    }
+    readonly schema?: Schema|FileSchema
     readonly headers?: Headers
     readonly examples?: Examples
-    readonly [_:string]: VendorExtension|string|{
-        readonly [_:string]: any
-    }|Headers|Examples|undefined
+    readonly [_:string]: VendorExtension|string|Schema|FileSchema|Headers|Examples|undefined
 }
 export type Headers = {
     readonly [_:string]: Header|undefined
@@ -216,12 +210,8 @@ export type PathParameterSubSchema = {
     readonly multipleOf?: MultipleOf
     readonly [_:string]: VendorExtension|string|PrimitivesItems|CollectionFormat|Default|Maximum|ExclusiveMaximum|Minimum|ExclusiveMinimum|MaxLength|MinLength|Pattern|MaxItems|MinItems|UniqueItems|Enum|MultipleOf|undefined
 }
-export type NonBodyParameter = {
-    readonly [_:string]: any
-}
-export type Parameter = {
-    readonly [_:string]: any
-}
+export type NonBodyParameter = HeaderParameterSubSchema|FormDataParameterSubSchema|QueryParameterSubSchema|PathParameterSubSchema
+export type Parameter = BodyParameter|NonBodyParameter
 export type Schema = {
     readonly $ref?: string
     readonly format?: string
@@ -312,9 +302,7 @@ export type Tag = {
     readonly [_:string]: VendorExtension|string|ExternalDocs|undefined
 }
 export type SecurityDefinitions = {
-    readonly [_:string]: {
-        readonly [_:string]: any
-    }|undefined
+    readonly [_:string]: BasicAuthenticationSecurity|ApiKeySecurity|Oauth2ImplicitSecurity|Oauth2PasswordSecurity|Oauth2ApplicationSecurity|Oauth2AccessCodeSecurity|undefined
 }
 export type BasicAuthenticationSecurity = {
     readonly type: "basic"
@@ -365,9 +353,7 @@ export type Oauth2Scopes = {
     readonly [_:string]: string|undefined
 }
 export type MediaTypeList = MimeType[]
-export type ParametersList = {
-    readonly [_:string]: any
-}[]
+export type ParametersList = (Parameter|JsonReference)[]
 export type SchemesList = ("http"|"https"|"ws"|"wss")[]
 export type CollectionFormat = "csv"|"ssv"|"tsv"|"pipes"
 export type CollectionFormatWithMulti = "csv"|"ssv"|"tsv"|"pipes"|"multi"

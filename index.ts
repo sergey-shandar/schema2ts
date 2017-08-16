@@ -55,6 +55,20 @@ function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
     }
 }
 
+namespace Schema {
+    export function onlyOne<T>(a: T|undefined, b: T|undefined) {
+        return a !== undefined ? a : b
+    }
+
+    export function allOfSchema(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
+        return {
+            $ref: onlyOne(a.$ref, b.$ref),
+            default: onlyOne(a.default, b.default)
+        }
+    }
+}
+
+
 namespace Ts {
     export interface Property {
         readonly name: string
@@ -191,22 +205,11 @@ namespace Ts {
     }
 }
 
-// const name = "swagger20"
+const name = "swagger20"
 // const name = "schema"
-const name = "swagger-autorest"
+// const name = "swagger-autorest"
 
 const definitionsUri = "#/definitions/"
-
-function onlyOne<T>(a: T|undefined, b: T|undefined) {
-    return a !== undefined ? a : b
-}
-
-function allOfSchema(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
-    return {
-        $ref: onlyOne(a.$ref, b.$ref),
-        default: onlyOne(a.default, b.default)
-    }
-}
 
 function createType(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
@@ -240,6 +243,14 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
         }
     }
 
+    // oneOf
+    {
+        const oneOf = schemaObject.oneOf
+        if (oneOf !== undefined) {
+            return [Ts.union(oneOf.map(createType))]
+        }
+    }
+
     // anyOf
     {
         const anyOf = schemaObject.anyOf
@@ -252,7 +263,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const allOf = schemaObject.allOf
         if (allOf !== undefined) {
-            return [createType(allOf.reduce(allOfSchema))]
+            return [createType(allOf.reduce(Schema.allOfSchema))]
         }
     }
 
