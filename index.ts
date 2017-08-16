@@ -215,6 +215,14 @@ namespace Ts {
             yield* typeAlias(i)
         }
     }
+
+    export const anyType : Ts.Type = { ref: "any" }
+    export const neverType : Ts.Type = { ref: "never" }
+    export const anyArrayType : Ts.Type = { array: anyType }
+    export const stringType : Ts.Type = { ref: "string"}
+    export const numberType : Ts.Type = { ref: "number" }
+    export const booleanType : Ts.Type = { ref: "boolean" }
+    export const undefinedType : Ts.Type = { ref: "undefined" }
 }
 
 // const name = "swagger20"
@@ -225,7 +233,7 @@ const definitionsUri = "#/definitions/"
 
 function createType(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
-        return anyType
+        return Ts.anyType
     }
     return Ts.union(createType0(schema))
 }
@@ -233,9 +241,9 @@ function createType(schema: X.Schema|undefined): Ts.Type {
 function createType0(schemaObject: X.Schema): Ts.Type[] {
     switch (schemaObject) {
         case true:
-            return [anyType];
+            return [Ts.anyType];
         case false:
-            return [neverType];
+            return [Ts.neverType];
     }
 
     // $ref
@@ -246,7 +254,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
             if ($ref.startsWith(definitionsUri)) {
                 return [Ts.refType($ref.substr(definitionsUri.length))]
             }
-            return [anyType]
+            return [Ts.anyType]
         }
     }
 
@@ -307,26 +315,18 @@ function pushUnique(a: Ts.Type[], v: Ts.Type) {
     }
 }
 
-const anyType : Ts.Type = { ref: "any" }
-const neverType : Ts.Type = { ref: "never" }
-const anyArrayType : Ts.Type = { array: anyType }
-const stringType : Ts.Type = { ref: "string"}
-const numberType : Ts.Type = { ref: "number" }
-const booleanType : Ts.Type = { ref: "boolean" }
-const undefinedType : Ts.Type = { ref: "undefined" }
-
 function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {
     // simple types
     switch (type) {
         case "array":
-            return anyArrayType
+            return Ts.anyArrayType
         case "string":
-            return stringType
+            return Ts.stringType
         case "integer":
         case "number":
-            return numberType
+            return Ts.numberType
         case "boolean":
-            return booleanType
+            return Ts.booleanType
     }
 
     // object
@@ -348,7 +348,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
     switch (additionalProperties) {
         case true:
         case undefined:
-            pushUnique(additionalPropertiesTypes, anyType)
+            pushUnique(additionalPropertiesTypes, Ts.anyType)
             break
         case false:
             break
@@ -367,7 +367,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
 
     if (additionalPropertiesTypes.length > 0) {
         properties.forEach(p => pushUnique(additionalPropertiesTypes, p.type))
-        pushUnique(additionalPropertiesTypes, undefinedType)
+        pushUnique(additionalPropertiesTypes, Ts.undefinedType)
         properties.push({ name: "[_:string]", type: Ts.union(additionalPropertiesTypes)})
     }
 
