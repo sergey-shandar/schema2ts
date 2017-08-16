@@ -25,6 +25,12 @@ function* indent(i: IterableIterator<string>) {
     }
 }
 
+function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
+    for (const i of ii) {
+        yield* i
+    }
+}
+
 function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
     let previous : string|undefined = undefined
     for (const i of ii) {
@@ -46,12 +52,6 @@ function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<stri
     }
     if (previous !== undefined) {
         yield previous
-    }
-}
-
-function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
-    for (const i of ii) {
-        yield* i
     }
 }
 
@@ -233,18 +233,19 @@ namespace Ts {
     export const undefinedType : Ts.Type = { ref: "undefined" }
 }
 
-const name = "swagger20"
-// const name = "schema"
-// const name = "swagger-autorest"
-
-function createType(schema: X.Schema|undefined): Ts.Type {
+function createTypeFromSchema(schema: X.Schema|undefined): Ts.Type {
     if (schema === undefined) {
         return Ts.anyType
     }
-    return Ts.union(createType0(schema))
+    return Ts.union(createTypesFromSchema(schema))
 }
 
-function createType0(schemaObject: X.Schema): Ts.Type[] {
+interface TsTypes {
+    readonly objectType: Ts.Type|undefined
+    readonly additionalTypes: Ts.Type[]
+}
+
+function createTypesFromSchema(schemaObject: X.Schema): Ts.Type[] {
     switch (schemaObject) {
         case true:
             return [Ts.anyType]
@@ -276,7 +277,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const oneOf = schemaObject.oneOf
         if (oneOf !== undefined) {
-            return [Ts.union(oneOf.map(createType))]
+            return [Ts.union(oneOf.map(createTypeFromSchema))]
         }
     }
 
@@ -284,7 +285,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const anyOf = schemaObject.anyOf
         if (anyOf !== undefined) {
-            return [Ts.union(anyOf.map(createType))]
+            return [Ts.union(anyOf.map(createTypeFromSchema))]
         }
     }
 
@@ -292,7 +293,7 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     {
         const allOf = schemaObject.allOf
         if (allOf !== undefined) {
-            return [createType(allOf.reduce(Schema.allOfSchema))]
+            return [createTypeFromSchema(allOf.reduce(Schema.allOfSchema))]
         }
     }
 
@@ -301,21 +302,21 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
         const items = schemaObject.items
         if (items !== undefined) {
             return [ Array.isArray(items)
-                ? { tuple: items.map(createType) }
-                : { array: createType(items) }
+                ? { tuple: items.map(createTypeFromSchema) }
+                : { array: createTypeFromSchema(items) }
             ]
         }
     }
 
     const type = schemaObject.type
     if (Array.isArray(type)) {
-        return type.map(t => createType2(t, schemaObject))
+        return type.map(t => createTypeFromSchemaObject(t, schemaObject))
     } else {
-        return [createType2(type, schemaObject)]
+        return [createTypeFromSchemaObject(type, schemaObject)]
     }
 }
 
-function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {
+function createTypeFromSchemaObject(type: string|undefined, schemaObject: X.SchemaObject): Ts.Type {
     // simple types
     switch (type) {
         case "array":
@@ -339,7 +340,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
             .map(name => ({
                 name: Ts.propertyName(name)
                     + (required.find(r => r === name) === undefined ? "?" : ""),
-                type: createType(schemaProperties[name])
+                type: createTypeFromSchema(schemaProperties[name])
             }))
         : []
 
@@ -353,7 +354,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
         case false:
             break
         default:
-            additionalPropertiesTypes.push(createType(additionalProperties))
+            additionalPropertiesTypes.push(createTypeFromSchema(additionalProperties))
             break
     }
 
@@ -362,7 +363,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
         const types = Object
             .keys(patternProperties)
             .forEach(k =>
-                additionalPropertiesTypes.push(createType(patternProperties[k])))
+                additionalPropertiesTypes.push(createTypeFromSchema(patternProperties[k])))
     }
 
     if (additionalPropertiesTypes.length > 0) {
@@ -378,7 +379,7 @@ function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAli
     if (schema === undefined) {
         return []
     }
-    const types = createType0(schema)
+    const types = createTypesFromSchema(schema)
     if (types.length === 1) {
         return [{ name: name, type: types[0]}]
     } else {
@@ -394,6 +395,8 @@ function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAli
         ]
     }
 }
+
+const name = process.argv[2]
 
 const schema : X.SchemaObject = JSON.parse(fs.readFileSync(name + ".json").toString())
 
