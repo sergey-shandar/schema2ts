@@ -55,6 +55,10 @@ function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<stri
     }
 }
 
+function optionalToArray<T>(v: T|undefined): T[] {
+    return v === undefined ? [] : [v]
+}
+
 namespace Schema {
     export const definitionsUri = "#/definitions/"
 
@@ -231,10 +235,6 @@ namespace Ts {
     export const numberType : Ts.Type = { ref: "number" }
     export const booleanType : Ts.Type = { ref: "boolean" }
     export const undefinedType : Ts.Type = { ref: "undefined" }
-}
-
-function optionalToArray<T>(v: T|undefined): T[] {
-    return v === undefined ? [] : [v]
 }
 
 function createTypeFromSchema(schema: X.Schema|undefined): Ts.Type {
