@@ -68,7 +68,6 @@ namespace Schema {
     }
 }
 
-
 namespace Ts {
     export interface Property {
         readonly name: string
@@ -195,9 +194,22 @@ namespace Ts {
         }
     }
 
+    export function typeName(name: string): string {
+        return (name[0].toUpperCase() + name.substr(1)).replace(/-/ig, "_")
+    }
+
+    export function refType(name: string): Ts.Type {
+        return { ref: typeName(name) };
+    }
+
+    export function propertyName(name: string): string {
+        return name.replace(/-/ig, "_")
+    }
+
     export function* typeAlias(t: TypeAlias) {
         yield* wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
+
     export function* module(m: Module) {
         for (const i of m) {
             yield* typeAlias(i)
@@ -205,8 +217,8 @@ namespace Ts {
     }
 }
 
-const name = "swagger20"
-// const name = "schema"
+// const name = "swagger20"
+const name = "schema"
 // const name = "swagger-autorest"
 
 const definitionsUri = "#/definitions/"
@@ -219,17 +231,20 @@ function createType(schema: X.Schema|undefined): Ts.Type {
 }
 
 function createType0(schemaObject: X.Schema): Ts.Type[] {
-    if (typeof schemaObject === "boolean") {
-        return [schemaObject ? anyType : neverType ]
+    switch (schemaObject) {
+        case true:
+            return [anyType];
+        case false:
+            return [neverType];
     }
 
     // $ref
     {
         const $ref = schemaObject.$ref
         if ($ref !== undefined) {
-            if ($ref === "#") return [refType(name)]
+            if ($ref === "#") return [Ts.refType(name)]
             if ($ref.startsWith(definitionsUri)) {
-                return [refType($ref.substr(definitionsUri.length))]
+                return [Ts.refType($ref.substr(definitionsUri.length))]
             }
             return [anyType]
         }
@@ -286,18 +301,6 @@ function createType0(schemaObject: X.Schema): Ts.Type[] {
     }
 }
 
-function typeName(name: string): string {
-    return (name[0].toUpperCase() + name.substr(1)).replace(/-/ig, "_")
-}
-
-function refType(name: string): Ts.Type {
-    return { ref: typeName(name) };
-}
-
-function propertyName(name: string): string {
-    return name.replace(/-/ig, "_")
-}
-
 function pushUnique(a: Ts.Type[], v: Ts.Type) {
     if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
         a.push(v)
@@ -334,7 +337,7 @@ function createType2(type: string|undefined, schemaObject: X.SchemaObject): Ts.T
         ? Object
             .keys(schemaProperties)
             .map(name => ({
-                name: propertyName(name)
+                name: Ts.propertyName(name)
                     + (required.find(r => r === name) === undefined ? "?" : ""),
                 type: createType(schemaProperties[name])
             }))
@@ -386,7 +389,7 @@ function createTypeAliases(name: string, schema: X.Schema|undefined): Ts.TypeAli
                 name: name,
                 type: Ts.union(types
                     .filter((_, i) => i > 0)
-                    .concat(refType(objectName)))
+                    .concat(Ts.refType(objectName)))
             }
         ]
     }
