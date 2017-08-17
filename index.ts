@@ -474,7 +474,7 @@ namespace Php {
     }
 
     export function* classToText(class_: Class) {
-        yield "class " + class_.name
+        yield "class " + class_.name + " extends " + class_.extends
         yield "{"
         yield "}"
     }

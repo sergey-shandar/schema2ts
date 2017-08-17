@@ -59,3 +59,4 @@ typings/
 
 index.js
 index.d.ts
+*.php
