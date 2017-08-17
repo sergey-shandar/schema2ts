@@ -462,7 +462,7 @@ namespace Php {
     type Statement = {
         readonly return: Expression
     }
-    type Function = {
+    export type Function = {
         readonly name: string
         readonly return: Type
         readonly body: Statement[]
@@ -473,16 +473,36 @@ namespace Php {
         readonly functions: Function[]
     }
 
+    export function* functionToText(function_: Function) {
+        yield "function " + function_.name + "()"
+        yield "{"
+        yield "}"
+    }
+
     export function* classToText(class_: Class) {
+        yield "<?php"
         yield "class " + class_.name + " extends " + class_.extends
         yield "{"
+        yield *flatten(class_.functions.map(f => indent(functionToText(f))))
         yield "}"
     }
 }
 
 namespace SchemaToPhp {
-    export function schemaToClass(ns: Schema.NamedSchema): Php.Class {
-        return { name: ns.name, extends: "DataAbstract", functions: [] }
+    export function schemaToClass(ns: Schema.NamedSchema): Php.Class|undefined {
+        const schema = ns.schema
+        if (typeof schema === "boolean") {
+            return undefined
+        }
+        const p = schema.properties
+        const functions: Php.Function[] = p !== undefined
+            ? Array.from(map(properties(p), p => ({
+                name: p.key,
+                return: { name: "void" },
+                body: []
+            })))
+            : []
+        return { name: ns.name, extends: "DataAbstract", functions: functions }
     }
 }
 
@@ -507,9 +527,11 @@ fs.writeFileSync(name + ".d.ts", text)
 const phpClasses = map(Schema.allDefinitions(main), d => SchemaToPhp.schemaToClass(d))
 
 for (const class_ of phpClasses) {
-    let text = "<?php" + os.EOL
-    for (const line of Php.classToText(class_)) {
-        text += line + os.EOL
+    if (class_ !== undefined) {
+        let text = ""
+        for (const line of Php.classToText(class_)) {
+            text += line + os.EOL
+        }
+        fs.writeFileSync(class_.name + ".php", text)
     }
-    fs.writeFileSync(class_.name + ".php", text)
 }
