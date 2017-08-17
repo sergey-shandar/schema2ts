@@ -272,27 +272,6 @@ namespace Ts {
     export const anyArrayType : Ts.Type = { array: anyType }
 }
 
-namespace Php {
-    type Type = {
-        readonly name: string
-    }
-    type Expression = {
-    }
-    type Statement = {
-        readonly return: Expression
-    }
-    type Function = {
-        readonly name: string
-        readonly return: Type
-        readonly body: Statement[]
-    }
-    type Class = {
-        readonly name: string
-        readonly extends: string
-        readonly functions: Function[]
-    }
-}
-
 namespace Schema2Ts {
     function createTypeFromSchema(main: Schema.NamedSchema, schema: X.Schema|undefined): Ts.Type {
         if (schema === undefined) {
@@ -474,6 +453,39 @@ namespace Schema2Ts {
     }
 }
 
+namespace Php {
+    type Type = {
+        readonly name: string
+    }
+    type Expression = {
+    }
+    type Statement = {
+        readonly return: Expression
+    }
+    type Function = {
+        readonly name: string
+        readonly return: Type
+        readonly body: Statement[]
+    }
+    export type Class = {
+        readonly name: string
+        readonly extends: string
+        readonly functions: Function[]
+    }
+
+    export function* classToText(class_: Class) {
+        yield "class " + class_.name
+        yield "{"
+        yield "}"
+    }
+}
+
+namespace SchemaToPhp {
+    export function schemaToClass(ns: Schema.NamedSchema): Php.Class {
+        return { name: ns.name, extends: "DataAbstract", functions: [] }
+    }
+}
+
 const name = process.argv[2]
 
 const schema : X.SchemaObject = JSON.parse(fs.readFileSync(name + ".json").toString())
@@ -491,3 +503,13 @@ for (const line of Ts.module(flatten(result))) {
     text += line + os.EOL
 }
 fs.writeFileSync(name + ".d.ts", text)
+
+const phpClasses = map(Schema.allDefinitions(main), d => SchemaToPhp.schemaToClass(d))
+
+for (const class_ of phpClasses) {
+    let text = "<?php" + os.EOL
+    for (const line of Php.classToText(class_)) {
+        text += line + os.EOL
+    }
+    fs.writeFileSync(class_.name + ".php", text)
+}
