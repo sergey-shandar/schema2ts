@@ -2,6 +2,36 @@ import * as fs from "fs"
 import * as os from "os"
 import X = require("./schema")
 
+function* map<T, R>(i: Iterable<T>, f: (v: T) => R) {
+    for (const v of i) {
+        yield f(v)
+    }
+}
+
+function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
+    for (const i of ii) {
+        yield* i
+    }
+}
+
+type KeyValue<T> = {
+    key: string
+    value: T
+}
+
+function* properties<T>(o: { [k:string]: T|undefined }): Iterable<KeyValue<T>> {
+    for (let key in o) {
+        const value = o[key]
+        if (value !== undefined) {
+            yield { key: key, value: value }
+        }
+    }
+}
+
+function optionalToArray<T>(v: T|undefined): T[] {
+    return v === undefined ? [] : [v]
+}
+
 function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     let previous: string|undefined = undefined
     for (const v of i) {
@@ -19,20 +49,8 @@ function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     }
 }
 
-function* map<T, R>(i: Iterable<T>, f: (v: T) => R) {
-    for (const v of i) {
-        yield f(v)
-    }
-}
-
 function indent(i: IterableIterator<string>) {
     return map(i, v => "    " + v)
-}
-
-function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
-    for (const i of ii) {
-        yield* i
-    }
 }
 
 function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
@@ -57,24 +75,6 @@ function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<stri
     if (previous !== undefined) {
         yield previous
     }
-}
-
-type KeyValue<T> = {
-    key: string
-    value: T
-}
-
-function* properties<T>(o: { [k:string]: T|undefined }): Iterable<KeyValue<T>> {
-    for (let key in o) {
-        const value = o[key]
-        if (value !== undefined) {
-            yield { key: key, value: value }
-        }
-    }
-}
-
-function optionalToArray<T>(v: T|undefined): T[] {
-    return v === undefined ? [] : [v]
 }
 
 namespace Schema {
@@ -102,8 +102,7 @@ namespace Schema {
         if (typeof schema !== "boolean") {
             const definitions = schema.definitions
             if (definitions !== undefined) {
-                const p = properties(definitions)
-                yield* map(p, v => ({ name: v.key, schema: v.value }))
+                yield* map(properties(definitions), v => ({ name: v.key, schema: v.value }))
             }
         }
         yield root
