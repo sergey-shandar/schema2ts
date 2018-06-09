@@ -1,29 +1,13 @@
 import * as fs from "fs"
 import * as os from "os"
-import X = require("./schema")
+import * as X from "./schema"
+import * as I from "@ts-common/iterator-lib"
 
-function* map<T, R>(i: Iterable<T>, f: (v: T) => R) {
-    for (const v of i) {
-        yield f(v)
-    }
-}
-
-function* flatten<T>(ii: Iterable<Iterable<T>>): Iterable<T> {
-    for (const i of ii) {
-        yield* i
-    }
-}
-
-type KeyValue<T> = {
-    key: string
-    value: T
-}
-
-function* properties<T>(o: { [k:string]: T|undefined }): Iterable<KeyValue<T>> {
+function* properties<T>(o: { [k:string]: T|undefined }): Iterable<[string, T]> {
     for (let key in o) {
         const value = o[key]
         if (value !== undefined) {
-            yield { key: key, value: value }
+            yield I.nameValue(key, value)
         }
     }
 }
@@ -49,8 +33,8 @@ function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     }
 }
 
-function indent(i: IterableIterator<string>) {
-    return map(i, v => "    " + v)
+function indent(i: Iterable<string>) {
+    return I.map(i, v => "    " + v)
 }
 
 function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
@@ -85,11 +69,24 @@ namespace Schema {
         return a !== undefined ? a : b
     }
 
-    export function allOfSchema(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
+    export function allOfSchemaObject(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
         return {
             $ref: onlyOne(a.$ref, b.$ref),
             default: onlyOne(a.default, b.default)
         }
+    }
+
+    export function toSchemaObject(a: X.Schema): X.SchemaObject {
+        // http://json-schema.org/draft-06/json-schema-release-notes.html#additions-and-backwards-compatible-changes
+        switch (a) {
+            case true: return {}
+            case false: return {not: {}}
+            default: return a
+        }
+    }
+
+    export function allOfSchema(a: X.Schema, b: X.Schema): X.Schema {
+        return allOfSchemaObject(toSchemaObject(a), toSchemaObject(b))
     }
 
     export type NamedSchema = {
@@ -102,7 +99,9 @@ namespace Schema {
         if (typeof schema !== "boolean") {
             const definitions = schema.definitions
             if (definitions !== undefined) {
-                yield* map(properties(definitions), v => ({ name: v.key, schema: v.value }))
+                yield* I.map(
+                    properties(definitions),
+                    v => ({ name: I.getName(v), schema: I.getValue(v) }))
             }
         }
         yield root
@@ -461,12 +460,12 @@ const schemaDefinitions = schema.definitions
 
 const main = { name: name, schema: schema }
 
-const result = map(
+const result = I.map(
     Schema.allDefinitions(main),
     d => Schema2Ts.createTypeAliases(main, d))
 
 let text = ""
-for (const line of Ts.module(flatten(result))) {
+for (const line of Ts.module(I.flatten(result))) {
     text += line + os.EOL
 }
 fs.writeFileSync(name + ".d.ts", text)
