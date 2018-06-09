@@ -24,11 +24,11 @@
   },
   "homepage": "https://github.com/sergey-shandar/schema2ts#readme",
   "devDependencies": {
-    "@types/node": "^10.0.3",
-    "typescript": "^2.8.3"
+    "@types/node": "^10.3.2",
+    "typescript": "^2.9.1"
   },
   "dependencies": {
     "@ts-common/iterator-lib": "github:ts-common/iterator-lib",
-    "tslib": "^1.9.1"
+    "tslib": "^1.9.2"
   }
 }

@@ -3,15 +3,6 @@ import * as os from "os"
 import * as X from "./schema"
 import * as I from "@ts-common/iterator-lib"
 
-function* properties<T>(o: { [k:string]: T|undefined }): Iterable<[string, T]> {
-    for (let key in o) {
-        const value = o[key]
-        if (value !== undefined) {
-            yield I.nameValue(key, value)
-        }
-    }
-}
-
 function optionalToArray<T>(v: T|undefined): T[] {
     return v === undefined ? [] : [v]
 }
@@ -100,7 +91,7 @@ namespace Schema {
             const definitions = schema.definitions
             if (definitions !== undefined) {
                 yield* I.map(
-                    properties(definitions),
+                    I.entries(definitions),
                     v => ({ name: I.getName(v), schema: I.getValue(v) }))
             }
         }
