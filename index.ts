@@ -157,34 +157,12 @@ namespace Ts {
             && typeEqual(a.type, b.type)
     }
 
-    export function arrayEqual<T>(
-        a: T[]|undefined, b: T[]|undefined, e: (ai: T, bi: T) => boolean): boolean {
-
-        if (a === b) {
-            return true
-        }
-        if (a === undefined || b === undefined) {
-            return false
-        }
-        const al = a.length
-        const bl = b.length
-        if (al !== bl) {
-            return false
-        }
-        for (let i = 0; i < al; ++i) {
-            if (!e(a[i], b[i])) {
-                return false
-            }
-        }
-        return true
-    }
-
     export function interfaceEqual(a: Interface|undefined, b: Interface|undefined) {
-        return arrayEqual(a, b, propertyEqual)
+        return I.arrayEqual(a, b, propertyEqual)
     }
 
     export function typeArrayEqual(a: Type[]|undefined, b: Type[]|undefined) {
-        return arrayEqual(a, b, typeEqual)
+        return I.arrayEqual(a, b, typeEqual)
     }
 
     export function typeEqual(a: Type|undefined, b: Type|undefined): boolean {
