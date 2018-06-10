@@ -1,6 +1,6 @@
 {
   "name": "@ts-common/schema2ts",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
@@ -31,8 +31,11 @@
     "@types/node": "^10.3.2",
     "typescript": "^2.9.1"
   },
+  "files": [
+    "bin/schema2ts"
+  ],
   "dependencies": {
-    "@ts-common/iterator-lib": "github:ts-common/iterator-lib",
+    "@ts-common/iterator-lib": "0.0.14",
     "tslib": "^1.9.2"
   }
 }
