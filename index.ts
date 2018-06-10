@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import * as os from "os"
-import * as X from "./schema"
+import * as X from "@ts-common/schema"
 import * as I from "@ts-common/iterator-lib"
 
 function optionalToArray<T>(v: T|undefined): T[] {
