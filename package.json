@@ -4,7 +4,7 @@
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
-    "schema2ts": "./index"
+    "schema2ts": "./bin/schema2ts"
   },
   "scripts": {
     "prepack": "npm install && tsc",
