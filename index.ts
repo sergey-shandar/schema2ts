@@ -423,7 +423,9 @@ namespace Schema2Ts {
 
 const name = process.argv[2]
 
-const schema : X.SchemaObject = JSON.parse(fs.readFileSync(name + ".json").toString())
+const schemaAny = JSON.parse(fs.readFileSync(name + ".json").toString())
+
+const schema : X.SchemaObject = schemaAny
 
 const schemaDefinitions = schema.definitions
 
@@ -437,4 +439,4 @@ let text = ""
 for (const line of Ts.module(I.flatten(result))) {
     text += line + os.EOL
 }
-fs.writeFileSync(name + ".d.ts", text)
+fs.writeFileSync(name + ".ts", text)
