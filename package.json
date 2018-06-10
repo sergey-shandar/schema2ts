@@ -4,6 +4,7 @@
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "scripts": {
+    "prepack": "npm install && tsc",
     "tsc": "tsc",
     "schema2ts": "tsc && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
