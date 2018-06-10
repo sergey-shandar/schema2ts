@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
-  "bin" : { "schema2ts" : "./schema.js" },
+  "bin": {
+    "schema2ts": "./index.js"
+  },
   "scripts": {
     "prepack": "npm install && tsc",
     "tsc": "tsc",
