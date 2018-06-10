@@ -7,11 +7,12 @@ export type SchemaObject = {
     readonly $id?: string
     readonly $schema?: string
     readonly $ref?: string
+    readonly $comment?: string
     readonly title?: string
     readonly description?: string
-    readonly default?: {
-        readonly [_:string]: any
-    }
+    readonly default?: any
+    readonly readOnly?: boolean
+    readonly examples?: any[]
     readonly multipleOf?: number
     readonly maximum?: number
     readonly exclusiveMaximum?: number
@@ -43,12 +44,15 @@ export type SchemaObject = {
         readonly [_:string]: Schema|StringArray|undefined
     }
     readonly propertyNames?: Schema
-    readonly const?: {
-        readonly [_:string]: any
-    }
+    readonly const?: any
     readonly enum?: any[]
     readonly type?: SimpleTypes|SimpleTypes[]
     readonly format?: string
+    readonly contentMediaType?: string
+    readonly contentEncoding?: string
+    readonly if?: Schema
+    readonly then?: Schema
+    readonly else?: Schema
     readonly allOf?: SchemaArray
     readonly anyOf?: SchemaArray
     readonly oneOf?: SchemaArray
