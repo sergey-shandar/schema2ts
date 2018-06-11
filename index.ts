@@ -2,6 +2,7 @@ import * as fs from "fs"
 import * as os from "os"
 import * as X from "@ts-common/schema"
 import * as I from "@ts-common/iterator-lib"
+import * as U from "@ts-common/unknown"
 
 function optionalToArray<T>(v: T|undefined): T[] {
     return v === undefined ? [] : [v]
@@ -117,7 +118,14 @@ namespace Ts {
         readonly name: string
         readonly type: Type
     }
-    export type Module = Iterable<TypeAlias>
+    export interface Const {
+        readonly name: string
+        readonly value: U.Json.Unknown
+    }
+    export interface Module {
+        readonly types: Iterable<TypeAlias>
+        readonly consts: Iterable<Const>
+    }
 
     function pushUnique(a: Ts.Type[], v: Ts.Type) {
         if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
@@ -225,9 +233,16 @@ namespace Ts {
         yield* wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
 
+    export function* consts(c: Const) {
+        yield "export const " + c.name + " = undefined"
+    }
+
     export function* module(m: Module) {
-        for (const i of m) {
+        for (const i of m.types) {
             yield* typeAlias(i)
+        }
+        for (const i of m.consts) {
+            yield* consts(i)
         }
     }
 
@@ -436,7 +451,13 @@ const result = I.map(
     d => Schema2Ts.createTypeAliases(main, d))
 
 let text = ""
-for (const line of Ts.module(I.flatten(result))) {
+
+const tsModule: Ts.Module = {
+    types: I.flatten(result),
+    consts: [{ name: "schema", value: {} }]
+}
+
+for (const line of Ts.module(tsModule)) {
     text += line + os.EOL
 }
 fs.writeFileSync(name + ".ts", text)

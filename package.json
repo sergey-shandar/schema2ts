@@ -37,6 +37,7 @@
   "dependencies": {
     "@ts-common/iterator-lib": "0.0.14",
     "@ts-common/schema": "0.0.2",
+    "@ts-common/unknown": "0.0.0",
     "tslib": "^1.9.2"
   }
 }
