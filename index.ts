@@ -120,6 +120,7 @@ namespace Ts {
     }
     export interface Const {
         readonly name: string
+        readonly type: Type
         readonly value: U.Json.Unknown
     }
     export interface Module {
@@ -229,12 +230,39 @@ namespace Ts {
         return name.replace(/-/ig, "_")
     }
 
-    export function* typeAlias(t: TypeAlias) {
-        yield* wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
+    export function typeAlias(t: TypeAlias) {
+        return wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
 
-    export function* consts(c: Const) {
-        yield "export const " + c.name + " = undefined"
+    function properties(v: U.Json.Object) {
+        const e = I.entries(v)
+        return I.flatMap(e, p => wrap(value(p[1]), p[0] + ": ", ","))
+    }
+
+    class Visitor implements U.Json.Visitor<Iterable<string>> {
+        asNull() { return ["null"] }
+        asBoolean(v: boolean) { return [v ? "true" : "false"] }
+        asString(v: string) { return ['"' + v + '"'] }
+        asNumber(v: number) { return [v.toString()] }
+        asArray(v: ReadonlyArray<U.Json.Unknown>) { return ["[]"] }
+        *asObject(v: U.Json.Object) {
+            yield "{"
+            yield *indent(wrap(properties(v), "", ""))
+            yield "}"
+        }
+    }
+
+    const visitor: U.Json.Visitor<Iterable<string>> = new Visitor()
+
+    export function value(v: U.Json.Unknown) {
+        return U.Json.visit(v, visitor)
+    }
+
+    export function consts(c: Const) {
+        return wrap(
+            value(c.value),
+            "export const " + c.name + ": " + c.type.ref +" = ",
+            "")
     }
 
     export function* module(m: Module) {
@@ -376,7 +404,7 @@ namespace Schema2Ts {
         const required = schemaObject.required === undefined ? [] : schemaObject.required
         const schemaProperties = schemaObject.properties
 
-        let properties: Ts.Property[] = schemaProperties !== undefined
+        const properties: Ts.Property[] = schemaProperties !== undefined
             ? Object
                 .keys(schemaProperties)
                 .map(name => ({
@@ -454,7 +482,7 @@ let text = ""
 
 const tsModule: Ts.Module = {
     types: I.flatten(result),
-    consts: [{ name: "schema", value: {} }]
+    consts: [{ name: "schema", type: { ref: "Schema" }, value: schema }]
 }
 
 for (const line of Ts.module(tsModule)) {
