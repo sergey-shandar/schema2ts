@@ -239,12 +239,20 @@ namespace Ts {
         return I.flatMap(e, p => wrap(value(p[1]), p[0] + ": ", ","))
     }
 
+    function items(v: ReadonlyArray<U.Json.Unknown>) {
+        return I.flatMap(v, i => wrap(value(i), "", ","))
+    }
+
     class Visitor implements U.Json.Visitor<Iterable<string>> {
         asNull() { return ["null"] }
         asBoolean(v: boolean) { return [v ? "true" : "false"] }
         asString(v: string) { return ['"' + v + '"'] }
         asNumber(v: number) { return [v.toString()] }
-        asArray(v: ReadonlyArray<U.Json.Unknown>) { return ["[]"] }
+        *asArray(v: ReadonlyArray<U.Json.Unknown>) {
+            yield "["
+            yield *indent(wrap(items(v), "", ""))
+            yield "]"
+        }
         *asObject(v: U.Json.Object) {
             yield "{"
             yield *indent(wrap(properties(v), "", ""))
