@@ -1,8 +1,9 @@
 import * as fs from "fs"
 import * as os from "os"
 import * as X from "@ts-common/schema"
-import * as I from "@ts-common/iterator-lib"
-import * as U from "@ts-common/unknown"
+import * as _ from "@ts-common/iterator"
+import * as sm from "@ts-common/string-map"
+import * as unknown from "@ts-common/unknown"
 
 function optionalToArray<T>(v: T|undefined): T[] {
     return v === undefined ? [] : [v]
@@ -26,7 +27,7 @@ function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
 }
 
 function indent(i: Iterable<string>) {
-    return I.map(i, v => "    " + v)
+    return _.map(i, v => "    " + v)
 }
 
 function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
@@ -91,9 +92,9 @@ namespace Schema {
         if (typeof schema !== "boolean") {
             const definitions = schema.definitions
             if (definitions !== undefined) {
-                yield* I.map(
-                    I.entries(definitions),
-                    v => ({ name: I.getName(v), schema: I.getValue(v) }))
+                yield* _.map(
+                    sm.entries(definitions),
+                    v => ({ name: sm.entryName(v), schema: sm.entryValue(v) }))
             }
         }
         yield root
@@ -121,7 +122,7 @@ namespace Ts {
     export interface Const {
         readonly name: string
         readonly type: Type
-        readonly value: U.Json.Unknown
+        readonly value: unknown.Json.Unknown
     }
     export interface Module {
         readonly types: Iterable<TypeAlias>
@@ -167,11 +168,11 @@ namespace Ts {
     }
 
     export function interfaceEqual(a: Interface|undefined, b: Interface|undefined) {
-        return I.arrayEqual(a, b, propertyEqual)
+        return _.arrayEqual(a, b, propertyEqual)
     }
 
     export function typeArrayEqual(a: Type[]|undefined, b: Type[]|undefined) {
-        return I.arrayEqual(a, b, typeEqual)
+        return _.arrayEqual(a, b, typeEqual)
     }
 
     export function typeEqual(a: Type|undefined, b: Type|undefined): boolean {
@@ -234,36 +235,36 @@ namespace Ts {
         return wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
 
-    function properties(v: U.Json.Object) {
-        const e = I.entries(v)
-        return I.flatMap(e, p => wrap(value(p[1]), p[0] + ": ", ","))
+    function properties(v: unknown.Json.Object) {
+        const e = sm.entries(v)
+        return _.flatMap(e, p => wrap(value(sm.entryValue(p)), sm.entryName(p) + ": ", ","))
     }
 
-    function items(v: ReadonlyArray<U.Json.Unknown>) {
-        return I.flatMap(v, i => wrap(value(i), "", ","))
+    function items(v: ReadonlyArray<unknown.Json.Unknown>) {
+        return _.flatMap(v, i => wrap(value(i), "", ","))
     }
 
-    class Visitor implements U.Json.Visitor<Iterable<string>> {
+    class Visitor implements unknown.Json.Visitor<Iterable<string>> {
         asNull() { return ["null"] }
         asBoolean(v: boolean) { return [v ? "true" : "false"] }
         asString(v: string) { return ['"' + v + '"'] }
         asNumber(v: number) { return [v.toString()] }
-        *asArray(v: ReadonlyArray<U.Json.Unknown>) {
+        *asArray(v: ReadonlyArray<unknown.Json.Unknown>) {
             yield "["
             yield *indent(wrap(items(v), "", ""))
             yield "]"
         }
-        *asObject(v: U.Json.Object) {
+        *asObject(v: unknown.Json.Object) {
             yield "{"
             yield *indent(wrap(properties(v), "", ""))
             yield "}"
         }
     }
 
-    const visitor: U.Json.Visitor<Iterable<string>> = new Visitor()
+    const visitor: unknown.Json.Visitor<Iterable<string>> = new Visitor()
 
-    export function value(v: U.Json.Unknown) {
-        return U.Json.visit(v, visitor)
+    export function value(v: unknown.Json.Unknown) {
+        return unknown.Json.visit(v, visitor)
     }
 
     export function consts(c: Const) {
@@ -482,14 +483,14 @@ const schemaDefinitions = schema.definitions
 
 const main = { name: name, schema: schema }
 
-const result = I.map(
+const result = _.map(
     Schema.allDefinitions(main),
     d => Schema2Ts.createTypeAliases(main, d))
 
 let text = ""
 
 const tsModule: Ts.Module = {
-    types: I.flatten(result),
+    types: _.flatten(result),
     consts: [{ name: "schema", type: { ref: "Schema" }, value: schema }]
 }
 

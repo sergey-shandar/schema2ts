@@ -1,6 +1,6 @@
 {
   "name": "@ts-common/schema2ts",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
@@ -28,16 +28,17 @@
   },
   "homepage": "https://github.com/sergey-shandar/schema2ts#readme",
   "devDependencies": {
-    "@types/node": "^10.3.2",
-    "typescript": "^2.9.1"
+    "@types/node": "^10.5.2",
+    "typescript": "^2.9.2"
   },
   "files": [
     "bin/schema2ts"
   ],
   "dependencies": {
-    "@ts-common/iterator-lib": "0.0.14",
+    "@ts-common/iterator": "0.0.19",
     "@ts-common/schema": "0.0.2",
+    "@ts-common/string-map": "0.0.1",
     "@ts-common/unknown": "0.0.0",
-    "tslib": "^1.9.2"
+    "tslib": "^1.9.3"
   }
 }
