@@ -207,11 +207,7 @@ namespace Ts {
             yield *join(t.union.map(type), "|"), "(", ")"
         } else if (t.array !== undefined) {
             const item = type(t.array)
-            if (t.array.union !== undefined) {
-                yield *wrap(item, "(", ")[]")
-            } else {
-                yield *wrap(item, "", "[]")
-            }
+            yield *wrap(item, "ReadonlyArray<", ">")
         } else if (t.tuple !== undefined) {
             yield *wrap(join(t.tuple.map(type), ","), "[", "]")
         } else if (t.const !== undefined) {
