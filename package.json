@@ -1,6 +1,6 @@
 {
   "name": "@ts-common/schema2ts",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
@@ -35,10 +35,10 @@
     "bin/schema2ts"
   ],
   "dependencies": {
-    "@ts-common/iterator": "0.0.19",
+    "@ts-common/iterator": "0.0.21",
     "@ts-common/schema": "0.0.2",
     "@ts-common/string-map": "0.0.1",
-    "@ts-common/unknown": "0.0.0",
+    "@ts-common/json": "0.0.2",
     "tslib": "^1.9.3"
   }
 }

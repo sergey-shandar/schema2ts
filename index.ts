@@ -3,9 +3,9 @@ import * as os from "os"
 import * as X from "@ts-common/schema"
 import * as _ from "@ts-common/iterator"
 import * as sm from "@ts-common/string-map"
-import * as unknown from "@ts-common/unknown"
+import * as json from "@ts-common/json"
 
-function optionalToArray<T>(v: T|undefined): T[] {
+function optionalToArray<T>(v: T|undefined): ReadonlyArray<T> {
     return v === undefined ? [] : [v]
 }
 
@@ -106,13 +106,13 @@ namespace Ts {
         readonly name: string
         readonly type: Type
     }
-    export type Interface = Property[]
+    export type Interface = ReadonlyArray<Property>
     export interface Type {
         readonly ref?: string
         readonly interface?: Interface
-        readonly union?: Type[]
+        readonly union?: ReadonlyArray<Type>
         readonly array?: Type
-        readonly tuple?: Type[]
+        readonly tuple?: ReadonlyArray<Type>
         readonly const?: string
     }
     export interface TypeAlias {
@@ -122,7 +122,7 @@ namespace Ts {
     export interface Const {
         readonly name: string
         readonly type: Type
-        readonly value: unknown.Json.Unknown
+        readonly value: json.Json
     }
     export interface Module {
         readonly types: Iterable<TypeAlias>
@@ -135,7 +135,7 @@ namespace Ts {
         }
     }
 
-    export function union(types: Type[]) {
+    export function union(types: ReadonlyArray<Type>) {
         let newTypes : Type[] = []
 
         // union flattering.
@@ -171,7 +171,7 @@ namespace Ts {
         return _.arrayEqual(a, b, propertyEqual)
     }
 
-    export function typeArrayEqual(a: Type[]|undefined, b: Type[]|undefined) {
+    export function typeArrayEqual(a: ReadonlyArray<Type>|undefined, b: ReadonlyArray<Type>|undefined) {
         return _.arrayEqual(a, b, typeEqual)
     }
 
@@ -235,36 +235,36 @@ namespace Ts {
         return wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
 
-    function properties(v: unknown.Json.Object) {
+    function properties(v: json.Object) {
         const e = sm.entries(v)
         return _.flatMap(e, p => wrap(value(sm.entryValue(p)), sm.entryName(p) + ": ", ","))
     }
 
-    function items(v: ReadonlyArray<unknown.Json.Unknown>) {
+    function items(v: ReadonlyArray<json.Json>) {
         return _.flatMap(v, i => wrap(value(i), "", ","))
     }
 
-    class Visitor implements unknown.Json.Visitor<Iterable<string>> {
+    class Visitor implements json.Visitor<Iterable<string>> {
         asNull() { return ["null"] }
         asBoolean(v: boolean) { return [v ? "true" : "false"] }
         asString(v: string) { return ['"' + v + '"'] }
         asNumber(v: number) { return [v.toString()] }
-        *asArray(v: ReadonlyArray<unknown.Json.Unknown>) {
+        *asArray(v: ReadonlyArray<json.Json>) {
             yield "["
             yield *indent(wrap(items(v), "", ""))
             yield "]"
         }
-        *asObject(v: unknown.Json.Object) {
+        *asObject(v: json.Object) {
             yield "{"
             yield *indent(wrap(properties(v), "", ""))
             yield "}"
         }
     }
 
-    const visitor: unknown.Json.Visitor<Iterable<string>> = new Visitor()
+    const visitor: json.Visitor<Iterable<string>> = new Visitor()
 
-    export function value(v: unknown.Json.Unknown) {
-        return unknown.Json.visit(v, visitor)
+    export function value(v: json.Json) {
+        return json.visit(v, visitor)
     }
 
     export function consts(c: Const) {
@@ -303,10 +303,10 @@ namespace Schema2Ts {
 
     interface TsTypes {
         readonly objectType?: Ts.Type
-        readonly additionalTypes: Ts.Type[]
+        readonly additionalTypes: ReadonlyArray<Ts.Type>
     }
 
-    function toTypes(types: Ts.Type[]): TsTypes {
+    function toTypes(types: ReadonlyArray<Ts.Type>): TsTypes {
         return { additionalTypes: types }
     }
 
@@ -410,7 +410,8 @@ namespace Schema2Ts {
 
     function createObjectType(main: Schema.NamedSchema, schemaObject: X.SchemaObject): Ts.Type {
         // object
-        const required = schemaObject.required === undefined ? [] : schemaObject.required
+        const required: ReadonlyArray<string> =
+            schemaObject.required === undefined ? [] : schemaObject.required
         const schemaProperties = schemaObject.properties
 
         const properties: Ts.Property[] = schemaProperties !== undefined
@@ -454,7 +455,9 @@ namespace Schema2Ts {
         return { interface: properties }
     }
 
-    export function createTypeAliases(main: Schema.NamedSchema, ns: Schema.NamedSchema): Ts.TypeAlias[] {
+    export function createTypeAliases(
+        main: Schema.NamedSchema, ns: Schema.NamedSchema
+    ): ReadonlyArray<Ts.TypeAlias> {
         const types = createTypesFromSchema(main, ns.schema)
         if (types.objectType !== undefined) {
             if (types.additionalTypes.length === 0) {
