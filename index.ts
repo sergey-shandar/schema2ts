@@ -120,7 +120,12 @@ namespace Ts {
         readonly type: Type
         readonly value: json.Json
     }
+    export interface Import {
+        readonly alias: string
+        readonly name: string
+    }
     export interface Module {
+        readonly imports: Iterable<Import>
         readonly types: Iterable<TypeAlias>
         readonly consts: Iterable<Const>
     }
@@ -272,7 +277,14 @@ namespace Ts {
             "")
     }
 
+    export function* import_(i: Import) {
+        yield "import * as " + i.alias + " from \"" + i.name + "\""
+    }
+
     export function* module(m: Module) {
+        for (const i of m.imports) {
+            yield* import_(i)
+        }
         for (const i of m.types) {
             yield* typeAlias(i)
         }
@@ -496,9 +508,13 @@ const result = _.map(
 
 let text = ""
 
+const tsCommonSchema = "@ts-common/schema"
+const tsCommonSchemaAlias = "ts_common_schema"
+
 const tsModule: Ts.Module = {
+    imports: [{ alias: tsCommonSchemaAlias, name: tsCommonSchema }],
     types: _.flatten(result),
-    consts: [{ name: "schema", type: { ref: "Schema" }, value: schema }]
+    consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Schema" }, value: schema }]
 }
 
 for (const line of Ts.module(tsModule)) {
