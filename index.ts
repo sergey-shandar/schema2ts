@@ -227,9 +227,15 @@ namespace Ts {
         return wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
     }
 
+    function normalizePropertyName(name: string): string {
+        return _.some(name, c => c === "^") ? `"${name}"` : name
+    }
+
     function properties(v: json.Object) {
         const e = sm.entries(v)
-        return _.flatMap(e, p => wrap(value(sm.entryValue(p)), sm.entryName(p) + ": ", ","))
+        return _.flatMap(
+            e,
+            p => wrap(value(sm.entryValue(p)), normalizePropertyName(sm.entryName(p)) + ": ", ","))
     }
 
     function items(v: ReadonlyArray<json.Json>) {
