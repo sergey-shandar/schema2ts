@@ -478,13 +478,15 @@ const argv = process.argv
 
 const name = process.argv[2]
 
+const output = argv.length > 3 ? argv[3] : name + ".ts"
+
 const schemaAny = JSON.parse(fs.readFileSync(name + ".json").toString())
 
 const schema : X.SchemaObject = schemaAny
 
 const schemaDefinitions = schema.definitions
 
-const shortName = _.last(name.split("/")) || "noname"
+const shortName = "Main" // _.last(name.split("/")) || "noname"
 
 const main = { name: shortName, schema: schema }
 
@@ -502,7 +504,5 @@ const tsModule: Ts.Module = {
 for (const line of Ts.module(tsModule)) {
     text += line + os.EOL
 }
-
-const output = argv.length > 3 ? argv[3] : name + ".ts"
 
 fs.writeFileSync(output, text)
