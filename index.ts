@@ -5,10 +5,6 @@ import * as _ from "@ts-common/iterator"
 import * as sm from "@ts-common/string-map"
 import * as json from "@ts-common/json"
 
-function optionalToArray<T>(v: T|undefined): ReadonlyArray<T> {
-    return v === undefined ? [] : [v]
-}
-
 function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     let previous: string|undefined = undefined
     for (const v of i) {
@@ -294,7 +290,7 @@ namespace Schema2Ts {
             return Ts.anyType
         }
         const types = createTypesFromSchema(main, schema)
-        return Ts.union(types.additionalTypes.concat(optionalToArray(types.objectType)))
+        return Ts.union(types.additionalTypes.concat(_.optionalToArray(types.objectType)))
     }
 
     interface TsTypes {
@@ -472,6 +468,8 @@ namespace Schema2Ts {
     }
 }
 
+const argv = process.argv
+
 const name = process.argv[2]
 
 const schemaAny = JSON.parse(fs.readFileSync(name + ".json").toString())
@@ -496,4 +494,7 @@ const tsModule: Ts.Module = {
 for (const line of Ts.module(tsModule)) {
     text += line + os.EOL
 }
-fs.writeFileSync(name + ".ts", text)
+
+const output = argv.length > 3 ? argv[3] : name + ".ts"
+
+fs.writeFileSync(output, text)
