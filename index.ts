@@ -478,7 +478,9 @@ const schema : X.SchemaObject = schemaAny
 
 const schemaDefinitions = schema.definitions
 
-const main = { name: name, schema: schema }
+const shortName = _.last(name.split("/")) || "noname"
+
+const main = { name: shortName, schema: schema }
 
 const result = _.map(
     Schema.allDefinitions(main),
