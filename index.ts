@@ -208,7 +208,7 @@ namespace Ts {
             yield *join(t.union.map(type), "|"), "(", ")"
         } else if (t.array !== undefined) {
             const item = type(t.array)
-            yield *wrap(item, "ReadonlyArray<", ">")
+            yield *wrap(item, "ts_common_array.ImmutableArray<", ">")
         } else if (t.tuple !== undefined) {
             yield *wrap(join(t.tuple.map(type), ","), "[", "]")
         } else if (t.const !== undefined) {
@@ -512,7 +512,10 @@ const tsCommonSchema = "@ts-common/schema"
 const tsCommonSchemaAlias = "ts_common_schema"
 
 const tsModule: Ts.Module = {
-    imports: [{ alias: tsCommonSchemaAlias, name: tsCommonSchema }],
+    imports: [
+        { alias: "ts_common_array", name: "@ts-common/array" },
+        { alias: tsCommonSchemaAlias, name: tsCommonSchema }
+    ],
     types: _.flatten(result),
     consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Schema" }, value: schema }]
 }
