@@ -459,7 +459,9 @@ namespace Schema2Ts {
         if (additionalPropertiesTypes.length > 0) {
             properties.forEach(p => additionalPropertiesTypes.push(p.type))
             additionalPropertiesTypes.push(Ts.undefinedType)
-            properties.push({ name: "[_:string]", type: Ts.union(additionalPropertiesTypes)})
+            if (properties.length === 0) {
+                properties.push({ name: "[_:string]", type: Ts.union(additionalPropertiesTypes)})
+            }
         }
 
         return { interface: properties }
