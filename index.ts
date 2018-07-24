@@ -236,7 +236,7 @@ namespace Ts {
         return _.some(name, c => c === "^") ? `"${name}"` : name
     }
 
-    function properties(v: json.Object) {
+    function properties(v: json.JsonObject) {
         const e = sm.entries(v)
         return _.flatMap(
             e,
@@ -252,12 +252,12 @@ namespace Ts {
         asBoolean(v: boolean) { return [v ? "true" : "false"] }
         asString(v: string) { return ['"' + v + '"'] }
         asNumber(v: number) { return [v.toString()] }
-        *asArray(v: ReadonlyArray<json.Json>) {
+        *asArray(v: json.JsonArray) {
             yield "["
             yield *indent(wrap(items(v), "", ""))
             yield "]"
         }
-        *asObject(v: json.Object) {
+        *asObject(v: json.JsonObject) {
             yield "{"
             yield *indent(wrap(properties(v), "", ""))
             yield "}"
