@@ -448,7 +448,6 @@ namespace Schema2Ts {
                 break
         }
 
-        /* no patternProperties for now
         const patternProperties = schemaObject.patternProperties
         if (patternProperties !== undefined) {
             const types = Object
@@ -456,7 +455,6 @@ namespace Schema2Ts {
                 .forEach(k =>
                     additionalPropertiesTypes.push(createTypeFromSchema(main, patternProperties[k])))
         }
-        */
 
         if (additionalPropertiesTypes.length > 0) {
             properties.forEach(p => additionalPropertiesTypes.push(p.type))
