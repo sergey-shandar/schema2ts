@@ -52,7 +52,7 @@ function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<stri
 
 namespace Schema {
 
-    export const definitionsUri = "#/definitions/"
+    export const definitionsPath = "#/definitions/"
 
     export function onlyOne<T>(a: T|undefined, b: T|undefined) {
         return a !== undefined ? a : b
@@ -320,6 +320,21 @@ namespace Schema2Ts {
         return { additionalTypes: types }
     }
 
+    function createRefType($ref: string): Ts.Type {
+        if ($ref === "#") return Ts.refType(main.name)
+        const split = $ref.split("#")
+        if (split.length !== 2) {
+            return Ts.anyType
+        }
+        const before = split[0]
+        const after = split[1]
+        const uri = Schema.definitionsPath
+        if (after.startsWith(uri)) {
+            return before === "" ? Ts.refType(after.substr(uri.length)) : Ts.anyType
+        }
+        return Ts.anyType
+    }
+
     function createTypesFromSchema(main: Schema.NamedSchema, schemaObject: X.Schema): TsTypes {
         switch (schemaObject) {
             case true:
@@ -332,11 +347,7 @@ namespace Schema2Ts {
         {
             const $ref = schemaObject.$ref
             if ($ref !== undefined) {
-                if ($ref === "#") return toTypes([Ts.refType(main.name)])
-                if ($ref.startsWith(Schema.definitionsUri)) {
-                    return toTypes([Ts.refType($ref.substr(Schema.definitionsUri.length))])
-                }
-                return toTypes([Ts.anyType])
+                return toTypes([createRefType($ref)])
             }
         }
 
