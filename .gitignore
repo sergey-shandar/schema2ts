@@ -57,5 +57,6 @@ typings/
 # dotenv environment variables file
 .env
 
-index.js
-index.d.ts
+*.js
+*.d.ts
+.vscode/

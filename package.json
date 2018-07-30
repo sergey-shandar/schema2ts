@@ -1,6 +1,6 @@
 {
   "name": "@ts-common/schema2ts",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
@@ -10,7 +10,7 @@
     "prepack": "npm install && tsc",
     "tsc": "tsc",
     "schema2ts": "tsc && node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsc && nyc mocha"
   },
   "repository": {
     "type": "git",
@@ -28,11 +28,17 @@
   },
   "homepage": "https://github.com/sergey-shandar/schema2ts#readme",
   "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.5",
     "@types/node": "^10.5.2",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
     "typescript": "^2.9.2"
   },
   "files": [
-    "bin/schema2ts"
+    "bin/schema2ts",
+    "lib.js"
   ],
   "dependencies": {
     "@ts-common/iterator": "0.0.26",
