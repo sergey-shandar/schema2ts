@@ -23,20 +23,21 @@ const main = { name: shortName, schema: schema }
 
 const importSet: Schema2Ts.MutableStringSet = {}
 
-const result = _.map(
+const result = _.toArray(_.flatten(_.map(
     Schema.allDefinitions(main),
-    d => Schema2Ts.createTypeAliases(main, importSet, d))
+    d => Schema2Ts.createTypeAliases(main, importSet, d)
+)))
 
 let text = ""
 
 const tsCommonSchema = "@ts-common/schema"
 const tsCommonSchemaAlias = "ts_common_schema"
 
-const importsArray = Array.from(_.map(sm.names(importSet), v => ({ alias: v, name: v })))
+const importsArray = Array.from(_.map(sm.names(importSet), v => ({ alias: Ts.typeName(v), name: "./" + v })))
 
 const tsModule: Ts.Module = {
     imports: [{ alias: tsCommonSchemaAlias, name: tsCommonSchema }, ...importsArray],
-    types: _.flatten(result),
+    types: result,
     consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Schema" }, value: schema }]
 }
 
