@@ -52,6 +52,8 @@ export namespace Schema {
 
     export const definitionsPath = "/definitions/"
 
+    export const propertiesPath = "/properties/"
+
     export function onlyOne<T>(a: T|undefined, b: T|undefined) {
         return a !== undefined ? a : b
     }
@@ -100,6 +102,10 @@ export namespace Ts {
         readonly name: string
         readonly type: Type
     }
+    export interface GenericRef {
+        readonly id: string
+        readonly parameters: ReadonlyArray<Type>
+    }
     export type Interface = ReadonlyArray<Property>
     export interface Type {
         readonly ref?: string
@@ -108,6 +114,7 @@ export namespace Ts {
         readonly array?: Type
         readonly tuple?: ReadonlyArray<Type>
         readonly const?: string
+        readonly genericRef?: GenericRef
     }
     export interface TypeAlias {
         readonly name: string
@@ -211,6 +218,10 @@ export namespace Ts {
             yield *wrap(join(t.tuple.map(type), ","), "[", "]")
         } else if (t.const !== undefined) {
             yield '"' + t.const + '"'
+        } else if (t.genericRef !== undefined) {
+            yield *wrap(
+                join(t.genericRef.parameters.map(type), ","), t.genericRef.id + "<", ">"
+            )
         }
     }
 
@@ -224,6 +235,10 @@ export namespace Ts {
 
     export function refType(name: string): Ts.Type {
         return { ref: typeName(name) };
+    }
+
+    export function genericRefType(id: string, parameters: ReadonlyArray<Ts.Type>): Ts.Type {
+        return { genericRef: { id: typeName(id), parameters: parameters }}
     }
 
     export function propertyName(name: string): string {
@@ -330,6 +345,32 @@ export namespace Schema2Ts {
         [name in string]?: true
     }
 
+    function getTypePrefix(imports: MutableStringSet, before: string): string {
+        if (before === "") {
+            return ""
+        }
+        const beforeSplit = before.split("/")
+        const fileName = beforeSplit[beforeSplit.length - 1]
+        const ns = fileName.split(".")[0]
+        imports[ns] = true
+        return ns + "."
+    }
+
+    function getRefType(prefix: string, after: string): Ts.Type {
+        if (after.startsWith(Schema.definitionsPath)) {
+            return Ts.refType(prefix + after.substr(Schema.definitionsPath.length))
+        }
+        if (after.startsWith(Schema.propertiesPath)) {
+            return Ts.genericRefType(
+                "TsCommonJson.Property",
+                [   Ts.refType(prefix + "Main"),
+                    { const: after.substr(Schema.propertiesPath.length) }
+                ]
+            )
+        }
+        return Ts.anyType
+    }
+
     export function createRefType(
         main: Schema.NamedSchema, imports: MutableStringSet, $ref: string
     ): Ts.Type {
@@ -342,19 +383,8 @@ export namespace Schema2Ts {
         }
         const before = split[0]
         const after = split[1]
-        const uri = Schema.definitionsPath
-        if (after.startsWith(uri)) {
-            const shortName = after.substr(uri.length)
-            if (before === "") {
-                return Ts.refType(shortName)
-            }
-            const beforeSplit = before.split("/")
-            const fileName = beforeSplit[beforeSplit.length - 1]
-            const ns = fileName.split(".")[0]
-            imports[ns] = true
-            return Ts.refType(ns + "." + shortName)
-        }
-        return Ts.anyType
+        const prefix = getTypePrefix(imports, before)
+        return getRefType(prefix, after)
     }
 
     function createTypesFromSchema(

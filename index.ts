@@ -15,8 +15,6 @@ const schemaAny = JSON.parse(fs.readFileSync(name + ".json").toString())
 
 const schema : X.SchemaObject = schemaAny
 
-const schemaDefinitions = schema.definitions
-
 const shortName = "Main" // _.last(name.split("/")) || "noname"
 
 const main = { name: shortName, schema: schema }
@@ -31,12 +29,22 @@ const result = _.toArray(_.flatten(_.map(
 let text = ""
 
 const tsCommonSchema = "@ts-common/schema"
-const tsCommonSchemaAlias = "ts_common_schema"
+const tsCommonSchemaAlias = "TsCommonSchema"
 
-const importsArray = Array.from(_.map(sm.names(importSet), v => ({ alias: Ts.typeName(v), name: "./" + v })))
+const tsCommonJson = "@ts-common/json"
+const tsCommonJsonAlias = "TsCommonJson"
+
+const importsArray = Array.from(_.map(
+    sm.names(importSet),
+    v => ({ alias: Ts.typeName(v), name: "./" + v })
+))
 
 const tsModule: Ts.Module = {
-    imports: [{ alias: tsCommonSchemaAlias, name: tsCommonSchema }, ...importsArray],
+    imports: [
+        { alias: tsCommonSchemaAlias, name: tsCommonSchema },
+        { alias: tsCommonJsonAlias, name: tsCommonJson },
+        ...importsArray
+    ],
     types: result,
     consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Schema" }, value: schema }]
 }
