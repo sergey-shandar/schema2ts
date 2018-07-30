@@ -305,11 +305,15 @@ export namespace Ts {
 }
 
 export namespace Schema2Ts {
-    function createTypeFromSchema(main: Schema.NamedSchema, schema: X.Schema|undefined): Ts.Type {
+    function createTypeFromSchema(
+        main: Schema.NamedSchema,
+        imports: MutableStringSet,
+        schema: X.Schema|undefined
+    ): Ts.Type {
         if (schema === undefined) {
             return Ts.anyType
         }
-        const types = createTypesFromSchema(main, schema)
+        const types = createTypesFromSchema(main, imports, schema)
         return Ts.union(types.additionalTypes.concat(_.optionalToArray(types.objectType)))
     }
 
@@ -322,8 +326,16 @@ export namespace Schema2Ts {
         return { additionalTypes: types }
     }
 
-    export function createRefType(main: Schema.NamedSchema, $ref: string): Ts.Type {
-        if ($ref === "#") return Ts.refType(main.name)
+    export type MutableStringSet = {
+        [name in string]?: true
+    }
+
+    export function createRefType(
+        main: Schema.NamedSchema, imports: MutableStringSet, $ref: string
+    ): Ts.Type {
+        if ($ref === "#") {
+            return Ts.refType(main.name)
+        }
         const split = $ref.split("#")
         if (split.length !== 2) {
             return Ts.anyType
@@ -339,12 +351,17 @@ export namespace Schema2Ts {
             const beforeSplit = before.split("/")
             const fileName = beforeSplit[beforeSplit.length - 1]
             const ns = fileName.split(".")[0]
+            imports[ns] = true
             return Ts.refType(ns + "." + shortName)
         }
         return Ts.anyType
     }
 
-    function createTypesFromSchema(main: Schema.NamedSchema, schemaObject: X.Schema): TsTypes {
+    function createTypesFromSchema(
+        main: Schema.NamedSchema,
+        imports: MutableStringSet,
+        schemaObject: X.Schema
+    ): TsTypes {
         switch (schemaObject) {
             case true:
                 return toTypes([Ts.anyType])
@@ -356,7 +373,7 @@ export namespace Schema2Ts {
         {
             const $ref = schemaObject.$ref
             if ($ref !== undefined) {
-                return toTypes([createRefType(main, $ref)])
+                return toTypes([createRefType(main, imports, $ref)])
             }
         }
 
@@ -372,7 +389,7 @@ export namespace Schema2Ts {
         {
             const oneOf = schemaObject.oneOf
             if (oneOf !== undefined) {
-                return toTypes(oneOf.map(v => createTypeFromSchema(main, v)))
+                return toTypes(oneOf.map(v => createTypeFromSchema(main, imports, v)))
             }
         }
 
@@ -380,7 +397,7 @@ export namespace Schema2Ts {
         {
             const anyOf = schemaObject.anyOf
             if (anyOf !== undefined) {
-                return toTypes(anyOf.map(v => createTypeFromSchema(main, v)))
+                return toTypes(anyOf.map(v => createTypeFromSchema(main, imports, v)))
             }
         }
 
@@ -388,7 +405,9 @@ export namespace Schema2Ts {
         {
             const allOf = schemaObject.allOf
             if (allOf !== undefined) {
-                return toTypes([createTypeFromSchema(main, allOf.reduce(Schema.allOfSchema))])
+                return toTypes([createTypeFromSchema(
+                    main, imports, allOf.reduce(Schema.allOfSchema)
+                )])
             }
         }
 
@@ -397,8 +416,8 @@ export namespace Schema2Ts {
             const items = schemaObject.items
             if (items !== undefined) {
                 return toTypes([ Array.isArray(items)
-                    ? { tuple: items.map(v => createTypeFromSchema(main, v)) }
-                    : { array: createTypeFromSchema(main, items) }
+                    ? { tuple: items.map(v => createTypeFromSchema(main, imports, v)) }
+                    : { array: createTypeFromSchema(main, imports, items) }
                 ])
             }
         }
@@ -407,7 +426,7 @@ export namespace Schema2Ts {
         if (Array.isArray(type)) {
             return {
                 objectType: type.find(v => v === "object") !== undefined
-                    ? createObjectType(main, schemaObject)
+                    ? createObjectType(main, imports, schemaObject)
                     : undefined,
                 additionalTypes:
                     type
@@ -416,7 +435,7 @@ export namespace Schema2Ts {
             }
         } else {
             return type === "object" || type === undefined
-                ? { objectType: createObjectType(main, schemaObject), additionalTypes: [] }
+                ? { objectType: createObjectType(main, imports, schemaObject), additionalTypes: [] }
                 : toTypes([createSimpleType(type)])
         }
     }
@@ -438,7 +457,9 @@ export namespace Schema2Ts {
         }
     }
 
-    function createObjectType(main: Schema.NamedSchema, schemaObject: X.SchemaObject): Ts.Type {
+    function createObjectType(
+        main: Schema.NamedSchema, imports: MutableStringSet, schemaObject: X.SchemaObject
+    ): Ts.Type {
         // object
         const required: ReadonlyArray<string> =
             schemaObject.required === undefined ? [] : schemaObject.required
@@ -450,7 +471,7 @@ export namespace Schema2Ts {
                 .map(name => ({
                     name: Ts.propertyName(name)
                         + (required.find(r => r === name) === undefined ? "?" : ""),
-                    type: createTypeFromSchema(main, schemaProperties[name])
+                    type: createTypeFromSchema(main, imports, schemaProperties[name])
                 }))
             : []
 
@@ -464,7 +485,9 @@ export namespace Schema2Ts {
             case false:
                 break
             default:
-                additionalPropertiesTypes.push(createTypeFromSchema(main, additionalProperties))
+                additionalPropertiesTypes.push(createTypeFromSchema(
+                    main, imports, additionalProperties
+                ))
                 break
         }
 
@@ -473,7 +496,9 @@ export namespace Schema2Ts {
             const types = Object
                 .keys(patternProperties)
                 .forEach(k =>
-                    additionalPropertiesTypes.push(createTypeFromSchema(main, patternProperties[k])))
+                    additionalPropertiesTypes.push(createTypeFromSchema(
+                        main, imports, patternProperties[k]
+                    )))
         }
 
         if (additionalPropertiesTypes.length > 0) {
@@ -488,9 +513,9 @@ export namespace Schema2Ts {
     }
 
     export function createTypeAliases(
-        main: Schema.NamedSchema, ns: Schema.NamedSchema
+        main: Schema.NamedSchema, imports: MutableStringSet, ns: Schema.NamedSchema
     ): ReadonlyArray<Ts.TypeAlias> {
-        const types = createTypesFromSchema(main, ns.schema)
+        const types = createTypesFromSchema(main, imports, ns.schema)
         if (types.objectType !== undefined) {
             if (types.additionalTypes.length === 0) {
                 return [{ name: ns.name, type: types.objectType }]

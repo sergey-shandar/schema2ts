@@ -1,6 +1,6 @@
 {
   "name": "@ts-common/schema2ts",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
