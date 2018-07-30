@@ -214,8 +214,12 @@ export namespace Ts {
         }
     }
 
-    export function typeName(name: string): string {
+    function pascalCase(name: string): string {
         return (name[0].toUpperCase() + name.substr(1)).replace(/-/ig, "_")
+    }
+
+    export function typeName(name: string): string {
+        return name.split(".").map(pascalCase).join(".")
     }
 
     export function refType(name: string): Ts.Type {
@@ -328,7 +332,14 @@ export namespace Schema2Ts {
         const after = split[1]
         const uri = Schema.definitionsPath
         if (after.startsWith(uri)) {
-            return before === "" ? Ts.refType(after.substr(uri.length)) : Ts.anyType
+            const shortName = after.substr(uri.length)
+            if (before === "") {
+                return Ts.refType(shortName)
+            }
+            const beforeSplit = before.split("/")
+            const fileName = beforeSplit[beforeSplit.length - 1]
+            const ns = fileName.split(".")[0]
+            return Ts.refType(ns + "." + shortName)
         }
         return Ts.anyType
     }
