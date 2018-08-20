@@ -52,7 +52,7 @@ const tsModule: Ts.Module = {
         ...importsArray
     ],
     types: result,
-    consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Schema" }, value: schema }]
+    consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Main" }, value: schema }]
 }
 
 for (const line of Ts.module(tsModule)) {
