@@ -3,7 +3,8 @@ import * as os from "os"
 import * as X from "@ts-common/schema"
 import * as _ from "@ts-common/iterator"
 import { Schema, Schema2Ts, Ts } from "./lib"
-import * as sm from '@ts-common/string-map'
+import * as sm from "@ts-common/string-map"
+import { parse } from "@ts-common/json-parser"
 
 const argv = process.argv
 
@@ -11,9 +12,14 @@ const name = process.argv[2]
 
 const output = argv.length > 3 ? argv[3] : name + ".ts"
 
-const schemaAny = JSON.parse(fs.readFileSync(name + ".json").toString())
+const fileName = name + ".json"
 
-const schema : X.SchemaObject = schemaAny
+const schemaAny = parse(
+    { kind: "file", url: fileName },
+    fs.readFileSync(fileName + ".json").toString()
+)
+
+const schema : X.SchemaObject = schemaAny as any
 
 const shortName = "Main" // _.last(name.split("/")) || "noname"
 
