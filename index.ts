@@ -6,11 +6,13 @@ import { Schema, Schema2Ts, Ts } from "./lib"
 import * as sm from "@ts-common/string-map"
 import { parse } from "@ts-common/json-parser"
 
-const argv = process.argv
+const argv = _.toArray(_.drop(process.argv, 2))
 
-const name = process.argv[2]
+const name = argv[0]
 
-const output = argv.length > 3 ? argv[3] : name + ".ts"
+const output = name + ".ts" // argv.length > 3 ? argv[3] : name + ".ts"
+
+const selfSchema = _.some(argv, v => v === "--self-schema")
 
 const fileName = name + ".json"
 
@@ -45,14 +47,19 @@ const importsArray = Array.from(_.map(
     v => ({ alias: Ts.typeName(v), name: "./" + v })
 ))
 
+
 const tsModule: Ts.Module = {
     imports: [
-        { alias: tsCommonSchemaAlias, name: tsCommonSchema },
+        ...(selfSchema ? [] : [{ alias: tsCommonSchemaAlias, name: tsCommonSchema }]),
         { alias: tsCommonJsonAlias, name: tsCommonJson },
         ...importsArray
     ],
     types: result,
-    consts: [{ name: "schema", type: { ref: tsCommonSchemaAlias + ".Main" }, value: schema }]
+    consts: [{
+        name: "schema",
+        type: { ref: selfSchema ? "Main" : tsCommonSchemaAlias + ".Main" },
+        value: schema
+    }]
 }
 
 for (const line of Ts.module(tsModule)) {
