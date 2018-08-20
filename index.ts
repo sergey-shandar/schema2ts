@@ -16,7 +16,7 @@ const fileName = name + ".json"
 
 const schemaAny = parse(
     { kind: "file", url: fileName },
-    fs.readFileSync(fileName + ".json").toString()
+    fs.readFileSync(fileName).toString()
 )
 
 const schema : X.SchemaObject = schemaAny as any
