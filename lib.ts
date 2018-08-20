@@ -90,7 +90,7 @@ export namespace Schema {
             if (definitions !== undefined) {
                 yield* _.map(
                     sm.entries(definitions),
-                    v => ({ name: sm.entryName(v), schema: sm.entryValue(v) }))
+                    v => ({ name: sm.entryKey(v), schema: sm.entryValue(v) }))
             }
         }
         yield root
@@ -174,11 +174,11 @@ export namespace Ts {
     }
 
     export function interfaceEqual(a: Interface|undefined, b: Interface|undefined) {
-        return _.arrayEqual(a, b, propertyEqual)
+        return _.isEqual(a, b, propertyEqual)
     }
 
     export function typeArrayEqual(a: ReadonlyArray<Type>|undefined, b: ReadonlyArray<Type>|undefined) {
-        return _.arrayEqual(a, b, typeEqual)
+        return _.isEqual(a, b, typeEqual)
     }
 
     export function typeEqual(a: Type|undefined, b: Type|undefined): boolean {
@@ -257,7 +257,7 @@ export namespace Ts {
         const e = sm.entries(v)
         return _.flatMap(
             e,
-            p => wrap(value(sm.entryValue(p)), normalizePropertyName(sm.entryName(p)) + ": ", ","))
+            ([pk, pv]) => wrap(value(pv), normalizePropertyName(pk) + ": ", ","))
     }
 
     function items(v: ReadonlyArray<json.Json>) {
@@ -310,7 +310,8 @@ export namespace Ts {
         }
     }
 
-    export const anyType : Ts.Type = { ref: "any" }
+    // export const anyType : Ts.Type = { ref: "any" }
+    export const anyType: Ts.Type = { ref: "TsCommonJson.Json" }
     export const neverType : Ts.Type = { ref: "never" }
     export const stringType : Ts.Type = { ref: "string"}
     export const numberType : Ts.Type = { ref: "number" }

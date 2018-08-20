@@ -1,6 +1,6 @@
 {
   "name": "@ts-common/schema2ts",
-  "version": "0.0.37",
+  "version": "0.0.39",
   "description": "JSON Schema to TypeScript",
   "main": "index.js",
   "bin": {
@@ -30,21 +30,21 @@
   "devDependencies": {
     "@types/chai": "^4.1.4",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^10.5.2",
+    "@types/node": "^10.7.1",
     "chai": "^4.1.2",
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
-    "typescript": "^2.9.2"
+    "typescript": "^3.0.1"
   },
   "files": [
     "bin/schema2ts",
     "lib.js"
   ],
   "dependencies": {
-    "@ts-common/iterator": "0.0.30",
-    "@ts-common/json": "0.0.7",
+    "@ts-common/iterator": "0.0.33",
+    "@ts-common/json": "0.0.15",
     "@ts-common/schema": "0.0.2",
-    "@ts-common/string-map": "0.0.1",
+    "@ts-common/string-map": "0.0.17",
     "tslib": "^1.9.3"
   }
 }

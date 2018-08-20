@@ -35,7 +35,7 @@ const tsCommonJson = "@ts-common/json"
 const tsCommonJsonAlias = "TsCommonJson"
 
 const importsArray = Array.from(_.map(
-    sm.names(importSet),
+    sm.keys(importSet),
     v => ({ alias: Ts.typeName(v), name: "./" + v })
 ))
 
