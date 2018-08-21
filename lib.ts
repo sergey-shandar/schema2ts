@@ -20,9 +20,8 @@ function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
     }
 }
 
-function indent(i: Iterable<string>) {
-    return _.map(i, v => "    " + v)
-}
+const indent = (i: Iterable<string>) =>
+    _.map(i, v => "    " + v)
 
 function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
     let previous : string|undefined = undefined
@@ -54,18 +53,15 @@ export namespace Schema {
 
     export const propertiesPath = "/properties/"
 
-    export function onlyOne<T>(a: T|undefined, b: T|undefined) {
-        return a !== undefined ? a : b
-    }
+    export const onlyOne = <T>(a: T|undefined, b: T|undefined) =>
+        a !== undefined ? a : b
 
-    export function allOfSchemaObject(a: X.SchemaObject, b: X.SchemaObject): X.SchemaObject {
-        return {
-            $ref: onlyOne(a.$ref, b.$ref),
-            default: onlyOne(a.default, b.default)
-        }
-    }
+    export const allOfSchemaObject = (a: X.MainObject, b: X.MainObject): X.MainObject => ({
+        $ref: onlyOne(a.$ref, b.$ref),
+        default: onlyOne(a.default, b.default)
+    })
 
-    export function toSchemaObject(a: X.Schema): X.SchemaObject {
+    export const toSchemaObject = (a: X.Main): X.MainObject => {
         // http://json-schema.org/draft-06/json-schema-release-notes.html#additions-and-backwards-compatible-changes
         switch (a) {
             case true: return {}
@@ -74,13 +70,12 @@ export namespace Schema {
         }
     }
 
-    export function allOfSchema(a: X.Schema, b: X.Schema): X.Schema {
-        return allOfSchemaObject(toSchemaObject(a), toSchemaObject(b))
-    }
+    export const allOfSchema = (a: X.Main, b: X.Main): X.Main =>
+        allOfSchemaObject(toSchemaObject(a), toSchemaObject(b))
 
     export type NamedSchema = {
         readonly name: string
-        readonly schema: X.Schema
+        readonly schema: X.Main
     }
 
     export function* allDefinitions(root: NamedSchema): Iterable<NamedSchema> {
@@ -113,7 +108,7 @@ export namespace Ts {
         readonly union?: ReadonlyArray<Type>
         readonly array?: Type
         readonly tuple?: ReadonlyArray<Type>
-        readonly const?: string
+        readonly const?: json.Json
         readonly genericRef?: GenericRef
     }
     export interface TypeAlias {
@@ -135,13 +130,13 @@ export namespace Ts {
         readonly consts: Iterable<Const>
     }
 
-    function pushUnique(a: Ts.Type[], v: Ts.Type) {
+    const pushUnique = (a: Ts.Type[], v: Ts.Type) => {
         if (a.find(x => Ts.typeEqual(x, v)) === undefined) {
             a.push(v)
         }
     }
 
-    export function union(types: ReadonlyArray<Type>) {
+    export const union = (types: ReadonlyArray<Type>) => {
         let newTypes : Type[] = []
 
         // union flattering.
@@ -168,20 +163,18 @@ export namespace Ts {
             : { union: newTypes }
     }
 
-    export function propertyEqual(a: Property, b: Property): boolean {
-        return a.name === b.name
-            && typeEqual(a.type, b.type)
-    }
+    export const propertyEqual = (a: Property, b: Property): boolean =>
+        a.name === b.name && typeEqual(a.type, b.type)
 
-    export function interfaceEqual(a: Interface|undefined, b: Interface|undefined) {
-        return _.isEqual(a, b, propertyEqual)
-    }
+    export const interfaceEqual = (a: Interface|undefined, b: Interface|undefined) =>
+        _.isEqual(a, b, propertyEqual)
 
-    export function typeArrayEqual(a: ReadonlyArray<Type>|undefined, b: ReadonlyArray<Type>|undefined) {
-        return _.isEqual(a, b, typeEqual)
-    }
+    export const typeArrayEqual = (
+        a: ReadonlyArray<Type>|undefined,
+        b: ReadonlyArray<Type>|undefined
+    ) => _.isEqual(a, b, typeEqual)
 
-    export function typeEqual(a: Type|undefined, b: Type|undefined): boolean {
+    export const typeEqual = (a: Type|undefined, b: Type|undefined): boolean => {
         if (a === b) {
             return true
         }
@@ -225,50 +218,42 @@ export namespace Ts {
         }
     }
 
-    function pascalCase(name: string): string {
-        return (name[0].toUpperCase() + name.substr(1)).replace(/-/ig, "_")
-    }
+    const pascalCase = (name: string): string =>
+        (name[0].toUpperCase() + name.substr(1)).replace(/-/ig, "_")
 
-    export function typeName(name: string): string {
-        return name.split(".").map(pascalCase).join(".")
-    }
+    export const typeName = (name: string): string =>
+        name.split(".").map(pascalCase).join(".")
 
-    export function refType(name: string): Ts.Type {
-        return { ref: typeName(name) };
-    }
+    export const refType = (name: string): Ts.Type =>
+        ({ ref: typeName(name) })
 
-    export function genericRefType(id: string, parameters: ReadonlyArray<Ts.Type>): Ts.Type {
-        return { genericRef: { id: typeName(id), parameters: parameters }}
-    }
+    export const genericRefType = (id: string, parameters: ReadonlyArray<Ts.Type>): Ts.Type =>
+        ({ genericRef: { id: typeName(id), parameters: parameters }})
 
-    export function propertyName(name: string): string {
-        return name.replace(/-/ig, "_")
-    }
+    export const propertyName = (name: string): string =>
+        name.replace(/-/ig, "_")
 
-    export function typeAlias(t: TypeAlias) {
-        return wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
-    }
+    export const typeAlias = (t: TypeAlias) =>
+        wrap(type(t.type), "export type " + typeName(t.name) + " = ", "")
 
-    function normalizePropertyName(name: string): string {
-        return _.some(name, c => c === "^") ? `"${name}"` : name
-    }
+    const normalizePropertyName = (name: string): string =>
+        _.some(name, c => c === "^") ? `"${name}"` : name
 
-    function properties(v: json.JsonObject) {
+    const properties = (v: json.JsonObject) => {
         const e = sm.entries(v)
         return _.flatMap(
             e,
             ([pk, pv]) => wrap(value(pv), normalizePropertyName(pk) + ": ", ","))
     }
 
-    function items(v: ReadonlyArray<json.Json>) {
-        return _.flatMap(v, i => wrap(value(i), "", ","))
-    }
+    const items = (v: ReadonlyArray<json.Json>) =>
+        _.flatMap(v, i => wrap(value(i), "", ","))
 
     class Visitor implements json.Visitor<Iterable<string>> {
-        asNull() { return ["null"] }
-        asBoolean(v: boolean) { return [v ? "true" : "false"] }
-        asString(v: string) { return ['"' + v + '"'] }
-        asNumber(v: number) { return [v.toString()] }
+        asNull = () => ["null"]
+        asBoolean = (v: boolean) => [v ? "true" : "false"]
+        asString = (v: string) => ['"' + v + '"']
+        asNumber = (v: number) => [v.toString()];
         *asArray(v: json.JsonArray) {
             yield "["
             yield *indent(wrap(items(v), "", ""))
@@ -283,11 +268,9 @@ export namespace Ts {
 
     const visitor: json.Visitor<Iterable<string>> = new Visitor()
 
-    export function value(v: json.Json) {
-        return json.visit(v, visitor)
-    }
+    export const value = (v: json.Json) => json.visit(v, visitor)
 
-    export function consts(c: Const) {
+    export const consts = (c: Const) => {
         return wrap(
             value(c.value),
             "export const " + c.name + ": " + c.type.ref +" = ",
@@ -321,11 +304,11 @@ export namespace Ts {
 }
 
 export namespace Schema2Ts {
-    function createTypeFromSchema(
+    const createTypeFromSchema = (
         main: Schema.NamedSchema,
         imports: MutableStringSet,
-        schema: X.Schema|undefined
-    ): Ts.Type {
+        schema: X.Main|undefined
+    ): Ts.Type => {
         if (schema === undefined) {
             return Ts.anyType
         }
@@ -338,15 +321,12 @@ export namespace Schema2Ts {
         readonly additionalTypes: ReadonlyArray<Ts.Type>
     }
 
-    function toTypes(types: ReadonlyArray<Ts.Type>): TsTypes {
-        return { additionalTypes: types }
-    }
+    const toTypes = (types: ReadonlyArray<Ts.Type>): TsTypes =>
+        ({ additionalTypes: types })
 
-    export type MutableStringSet = {
-        [name in string]?: true
-    }
+    export type MutableStringSet = sm.MutableStringMap<boolean>
 
-    function getTypePrefix(imports: MutableStringSet, before: string): string {
+    const getTypePrefix = (imports: MutableStringSet, before: string): string => {
         if (before === "") {
             return ""
         }
@@ -357,7 +337,7 @@ export namespace Schema2Ts {
         return ns + "."
     }
 
-    function getRefType(prefix: string, after: string): Ts.Type {
+    const getRefType = (prefix: string, after: string): Ts.Type => {
         if (after.startsWith(Schema.definitionsPath)) {
             return Ts.refType(prefix + after.substr(Schema.definitionsPath.length))
         }
@@ -372,9 +352,11 @@ export namespace Schema2Ts {
         return Ts.anyType
     }
 
-    export function createRefType(
-        main: Schema.NamedSchema, imports: MutableStringSet, $ref: string
-    ): Ts.Type {
+    export const createRefType = (
+        main: Schema.NamedSchema,
+        imports: MutableStringSet,
+        $ref: string
+    ): Ts.Type => {
         if ($ref === "#") {
             return Ts.refType(main.name)
         }
@@ -388,11 +370,11 @@ export namespace Schema2Ts {
         return getRefType(prefix, after)
     }
 
-    function createTypesFromSchema(
+    const createTypesFromSchema = (
         main: Schema.NamedSchema,
         imports: MutableStringSet,
-        schemaObject: X.Schema
-    ): TsTypes {
+        schemaObject: X.Main
+    ): TsTypes => {
         switch (schemaObject) {
             case true:
                 return toTypes([Ts.anyType])
@@ -412,7 +394,10 @@ export namespace Schema2Ts {
         {
             const enum_ = schemaObject.enum
             if (enum_ !== undefined) {
-                return toTypes(enum_.map(v => ({ const: v })))
+                return toTypes(enum_.map(v => {
+                    const x: Ts.Type = { const: v }
+                    return x //{ const: v }
+                }))
             }
         }
 
@@ -446,7 +431,7 @@ export namespace Schema2Ts {
         {
             const items = schemaObject.items
             if (items !== undefined) {
-                return toTypes([ Array.isArray(items)
+                return toTypes([ _.isArray(items)
                     ? { tuple: items.map(v => createTypeFromSchema(main, imports, v)) }
                     : { array: createTypeFromSchema(main, imports, items) }
                 ])
@@ -454,7 +439,7 @@ export namespace Schema2Ts {
         }
 
         const type = schemaObject.type
-        if (Array.isArray(type)) {
+        if (_.isArray(type)) {
             return {
                 objectType: type.find(v => v === "object") !== undefined
                     ? createObjectType(main, imports, schemaObject)
@@ -488,9 +473,11 @@ export namespace Schema2Ts {
         }
     }
 
-    function createObjectType(
-        main: Schema.NamedSchema, imports: MutableStringSet, schemaObject: X.SchemaObject
-    ): Ts.Type {
+    const createObjectType = (
+        main: Schema.NamedSchema,
+        imports: MutableStringSet,
+        schemaObject: X.MainObject
+    ): Ts.Type => {
         // object
         const required: ReadonlyArray<string> =
             schemaObject.required === undefined ? [] : schemaObject.required
@@ -543,9 +530,11 @@ export namespace Schema2Ts {
         return { interface: properties }
     }
 
-    export function createTypeAliases(
-        main: Schema.NamedSchema, imports: MutableStringSet, ns: Schema.NamedSchema
-    ): ReadonlyArray<Ts.TypeAlias> {
+    export const createTypeAliases = (
+        main: Schema.NamedSchema,
+        imports: MutableStringSet,
+        ns: Schema.NamedSchema
+    ): ReadonlyArray<Ts.TypeAlias> => {
         const types = createTypesFromSchema(main, imports, ns.schema)
         if (types.objectType !== undefined) {
             if (types.additionalTypes.length === 0) {

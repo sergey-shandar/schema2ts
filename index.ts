@@ -21,7 +21,7 @@ const schemaAny = parse(
     fs.readFileSync(fileName).toString()
 )
 
-const schema : X.SchemaObject = schemaAny as any
+const schema : X.MainObject = schemaAny as any
 
 const shortName = "Main" // _.last(name.split("/")) || "noname"
 
