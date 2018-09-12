@@ -2,7 +2,7 @@
 
 JSON Schema to TypeScript. See also https://www.jsonschemavalidator.net/
 
-## Normalized Schema Object
+## Normalized Schema Object (Not Including `if`, `then`, `else`)
 
 ```ts
 interface SchemaObject {
