@@ -10,7 +10,7 @@ interface SchemaObject {
   readonly boolean?: BooleanType
   readonly integer?: IntegerType
   readonly null?: NullType
-  readonly number?: NumerType
+  readonly number?: NumberType
   readonly object?: ObjectType
   readonly string?: StringType
 }
