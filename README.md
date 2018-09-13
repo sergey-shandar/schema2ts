@@ -20,6 +20,11 @@ interface SimpleType {
 }
 
 interface ArrayType {
+    readonly additionalItems?: SchemaObject
+    readonly items?: SchemaObject|ReadonlyArray<SchemaObject>
+    readonly maxItems?: number
+    readonly minItems: number
+    readonly uniqueItems: boolean // default is false
 }
 
 interface BooleanType {
@@ -43,5 +48,8 @@ interface ObjectType {
 }
 
 interface StringType {
+    readonly maxLength?: number
+    readonly minLength: number // default is 0
+    readonly patter?: string
 }
 ```
