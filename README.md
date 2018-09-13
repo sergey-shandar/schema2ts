@@ -2,10 +2,14 @@
 
 JSON Schema to TypeScript. See also https://www.jsonschemavalidator.net/
 
-## Normalized Schema Object (Not Including `if`, `then`, `else`)
+See also http://json-schema.org/draft-07/schema
+
+## Normalized Schema Object
+
+Excluding `$id`, `$schema`, `$ref`, `$comment`, `title`, `description`, `default`, `readOnly`, `examples`
 
 ```ts
-interface SchemaObject {
+interface SimpleType {
   readonly array?: ArrayType
   readonly boolean?: BooleanType
   readonly integer?: IntegerType
@@ -21,13 +25,18 @@ interface ArrayType {
 interface BooleanType {
 }
 
-interface IntegerType {
+interface IntegerType extends NumberType {
 }
 
 interface NullType {
 }
 
 interface NumberType {
+    readonly multipleOf?: number
+    readonly maximum?: number
+    readonly exclusiveMaximum?: number
+    readonly minimum?: number
+    readonly exclusiveMinimum?: number
 }
 
 interface ObjectType {
