@@ -6,7 +6,7 @@ See also http://json-schema.org/draft-07/schema
 
 ## Normalized Schema Object
 
-Excluding `$id`, `$schema`, `$ref`, `$comment`, `title`, `description`, `default`, `readOnly`, `examples`
+Excluding `$id`, `$schema`, `$ref`, `$comment`, `title`, `description`, `default`, `readOnly`, `examples`, `contains`, `definitions`, `const`, `enum`, `if`, `then`, `else`, `allOf`, `anyOf`, `oneOf`, `not`.
 
 ```ts
 interface SimpleType {
@@ -45,11 +45,22 @@ interface NumberType {
 }
 
 interface ObjectType {
+    readonly maxProperties?: number
+    readonly minProperties: number // default is 0
+    readonly required: ReadonlyArray<string> // default is []
+    readonly additionalProperties?: SchemaObject
+    readonly properties: StringMap<SchemaObject> // default is {}
+    readonly patternProperties?: {} // ...
+    readonly dependencies?: {} // ...
+    readonly propertyNames?: {} // ...
 }
 
 interface StringType {
     readonly maxLength?: number
     readonly minLength: number // default is 0
     readonly patter?: string
+    readonly format?: string
+    readonly contentMediaType?: string
+    readonly contentEncodinf?: string
 }
 ```
