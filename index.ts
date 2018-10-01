@@ -17,7 +17,7 @@ const selfSchema = _.some(argv, v => v === "--self-schema")
 const fileName = name + ".json"
 
 const schemaAny = parse(
-    { kind: "file", url: fileName },
+    fileName,
     fs.readFileSync(fileName).toString()
 )
 
