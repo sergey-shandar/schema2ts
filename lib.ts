@@ -3,7 +3,7 @@ import * as X from "@ts-common/schema"
 import * as sm from "@ts-common/string-map"
 import * as json from "@ts-common/json"
 
-function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
+const wrap = function*(i: Iterable<string>, prefix: string, suffix: string) {
     let previous: string|undefined = undefined
     for (const v of i) {
         if (previous !== undefined) {
@@ -23,7 +23,7 @@ function* wrap(i: Iterable<string>, prefix: string, suffix: string) {
 const indent = (i: Iterable<string>) =>
     _.map(i, v => "    " + v)
 
-function* join(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
+const join = function*(ii: Iterable<Iterable<string>>, separator: string): Iterable<string> {
     let previous : string|undefined = undefined
     for (const i of ii) {
         if (previous !== undefined) {
@@ -78,7 +78,7 @@ export namespace Schema {
         readonly schema: X.Main
     }
 
-    export function* allDefinitions(root: NamedSchema): Iterable<NamedSchema> {
+    export const allDefinitions = function*(root: NamedSchema): Iterable<NamedSchema> {
         const schema = root.schema
         if (typeof schema !== "boolean") {
             const definitions = schema.definitions
@@ -189,7 +189,7 @@ export namespace Ts {
             && a.const === b.const
     }
 
-    export function* type(t: Type): IterableIterator<string> {
+    export const type = function*(t: Type): IterableIterator<string> {
         if (t.ref !== undefined) {
             yield t.ref
         } else if (t.interface !== undefined) {
@@ -270,18 +270,18 @@ export namespace Ts {
 
     export const value = (v: json.Json) => json.visit(v, visitor)
 
-    export const consts = (c: Const) => {
-        return wrap(
+    export const consts = (c: Const) =>
+        wrap(
             value(c.value),
             "export const " + c.name + ": " + c.type.ref +" = ",
-            "")
-    }
+            ""
+        )
 
-    export function* import_(i: Import) {
+    export const import_ = function*(i: Import) {
         yield "import * as " + i.alias + " from \"" + i.name + "\""
     }
 
-    export function* module(m: Module) {
+    export const module = function*(m: Module) {
         for (const i of m.imports) {
             yield* import_(i)
         }
@@ -456,7 +456,7 @@ export namespace Schema2Ts {
         }
     }
 
-    function createSimpleType(type: string|undefined) {
+    const createSimpleType = (type: string|undefined) => {
         // simple types
         switch (type) {
             case "array":
@@ -485,11 +485,11 @@ export namespace Schema2Ts {
 
         const properties: Ts.Property[] = schemaProperties !== undefined
             ? Object
-                .keys(schemaProperties)
-                .map(name => ({
+                .entries(schemaProperties)
+                .map(([name, value]) => ({
                     name: Ts.propertyName(name)
                         + (required.find(r => r === name) === undefined ? "?" : ""),
-                    type: createTypeFromSchema(main, imports, schemaProperties[name])
+                    type: createTypeFromSchema(main, imports, value)
                 }))
             : []
 
@@ -511,12 +511,13 @@ export namespace Schema2Ts {
 
         const patternProperties = schemaObject.patternProperties
         if (patternProperties !== undefined) {
-            const types = Object
-                .keys(patternProperties)
-                .forEach(k =>
+            Object
+                .values(patternProperties)
+                .forEach(v =>
                     additionalPropertiesTypes.push(createTypeFromSchema(
-                        main, imports, patternProperties[k]
-                    )))
+                        main, imports, v
+                    ))
+                )
         }
 
         if (additionalPropertiesTypes.length > 0) {

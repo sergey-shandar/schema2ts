@@ -60,3 +60,4 @@ typings/
 *.js
 *.d.ts
 .vscode/
+package-lock.json
